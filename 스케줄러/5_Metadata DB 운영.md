@@ -8,10 +8,6 @@ tags:
 created: 2026-05-11
 updated: 2026-05-11
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068816679/Airflow+Metadata+DB
-confluence_id: 5068816679
-space_id: 365101058
-space_key: DP
-version: 1
 ---
 
 # Metadata DB 운영

@@ -8,10 +8,6 @@ tags:
 created: 2026-05-11
 updated: 2026-05-11
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068882427/Airflow+Queue+Pod
-confluence_id: 5068882427
-space_id: 365101058
-space_key: DP
-version: 1
 ---
 
 # Queue 라우팅과 Pod 스펙 설정

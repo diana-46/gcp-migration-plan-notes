@@ -8,10 +8,6 @@ tags:
 created: 2026-05-11
 updated: 2026-05-11
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+Cloud+Composer+2+vs+Self-managed
-confluence_id: 5068260232
-space_id: 365101058
-space_key: DP
-version: 1
 ---
 
 # Cloud Composer 2 vs Self-managed 비교
