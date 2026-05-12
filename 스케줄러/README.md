@@ -65,7 +65,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 
 | 항목                      | 현재               | 이관 후 (검토 중)                                           |
 | ----------------------- | ---------------- | ----------------------------------------------------- |
-| Airflow 버전              | 2.x              | 2.x 유지                                                |
+| Airflow 버전              | 2.x              | 최신 버전                                                 |
 | 실행 환경                   | on-prem k8s (추정) | GCP (Composer 또는 GKE)                                 |
 | Metadata DB             | (현재 운영 DB)       | Cloud SQL PostgreSQL                                  |
 | Message Queue (Celery용) | (현재 Redis)       | Memorystore (Composer 자동) 또는 자체 Redis                 |
