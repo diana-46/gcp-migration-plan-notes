@@ -1,0 +1,22 @@
+.claude
+.claudian
+.obsidian
+
+**/raws
+
+# Confluence sync build output
+_build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets
+scripts/.env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
