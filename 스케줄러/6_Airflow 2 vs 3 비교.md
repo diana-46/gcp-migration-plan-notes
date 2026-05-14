@@ -82,6 +82,7 @@ Airflow 3:
 - Dataset → **Asset** 으로 개명 + 확장
 - `AssetWatcher`: 외부 이벤트(파일 도착, BQ 테이블 갱신 등)로 DAG trigger
 - BigQuery / GCS 트리거에 활용 가능 — Airflow가 polling 안 해도 됨
+- 상세: [[9_Airflow Asset과 Dataset]]
 
 ### 3. DAG Bundles
 

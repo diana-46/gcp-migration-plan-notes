@@ -28,7 +28,7 @@
 | 영역       | 폴더                   | 다루는 내용                                                                                                                                                                             |
 | -------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **스케줄러** | [[스케줄러/1_개요\|스케줄러/]] | • Airflow 운영 방식 (Composer vs Self-managed)<br>• Airflow에서 dbt를 어떻게 돌릴지 (KubernetesPodOperator, dbt-airflow 패턴 등)                                                                   |
-| **애슬론**  | `애슬론/` *(예정)*        | ETL→dbt, Presto→BigQuery 전환 결정 위에서<br>**"athlon 플랫폼은 어떻게 재구현될 것인가"**<br>• athlon이 dbt 모델을 어떻게 품을지 (UI / git 연동 / 배포)<br>• Userlake 쿼리 BQ 전환<br>• extract / workflows / actions의 변화 |
+| **애슬론**  | [[애슬론/1_개요\|애슬론/]] | ETL→dbt, Presto→BigQuery 전환 결정 위에서 **"athlon 플랫폼은 어떻게 재구현될 것인가"**<br>5축 통합 관리: UI / 실행 그래프 / 백필 / Git Sync / DataHub Lineage<br>• dbt 영역 + Airflow operator 영역 분담 + ActionGroup<br>• 수집 → ETL lineage 연결 (dbt만으론 불가)<br>• Custom Operator triage / Userlake BQ 전환 / extract 운명 |
 
 **확정 사항** (이 레포에서는 재논의하지 않음):
 
