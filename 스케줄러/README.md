@@ -9,13 +9,15 @@
 
 GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 
-1. **Cloud Composer 2** (managed) 로 띄울 것인가
+1. **Cloud Composer** (managed, 2026년 신규는 Composer 3 = Airflow 3 기본) 로 띄울 것인가
 2. **Self-managed Airflow on GKE** 로 직접 띄울 것인가
 
 부수적으로 따라오는 결정:
+- **Airflow 버전 선택** (2.x 유지 / 3.x로 점프) — [[6_Airflow 2 vs 3 비교]]
 - Executor 선택 (CeleryKubernetes / Kubernetes 단독 등)
 - Worker queue 분리 전략
 - Metadata DB 운영 방식
+- Airflow에서 dbt 실행 방식 (KubernetesPodOperator 등)
 
 ---
 
@@ -28,12 +30,16 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 | **K8s Pod (task=pod)** | task마다 새 Pod를 띄워서 실행 (격리 ↑, 오버헤드 10~30초) |
 | **Queue** | task가 어느 워커 그룹으로 갈지 라우팅하는 이름. `queue='kubernetes'`면 Pod로 |
 | **Pool** | Airflow의 동시 실행 슬롯 제한 메커니즘 (UI Admin → Pools) |
-| **Composer** | GCP의 managed Airflow 서비스 (Cloud Composer 2) |
+| **Composer 2 / 3** | GCP의 managed Airflow. **Composer 2 = Airflow 2.x**, **Composer 3 = Airflow 3.x** |
 | **Self-managed** | GKE 위에 직접 Airflow를 설치해 운영하는 방식 |
 | **Memorystore** | GCP의 managed Redis (Composer가 Celery용으로 자동 프로비저닝) |
 | **AlloyDB** | GCP의 PostgreSQL 호환 고성능 DB (Metadata DB 옵션 중 하나) |
 | **PgBouncer** | PostgreSQL 커넥션 풀러 (대규모 Airflow에서 거의 필수) |
 | **Workload Identity** | GKE Pod에 GCP IAM SA를 매핑하는 방식. Composer는 자동 구성 |
+| **Task SDK** | Airflow 3에서 도입. task가 메타DB에 직접 붙지 않고 API로만 통신 |
+| **Asset / AssetWatcher** | Airflow 3에서 Dataset의 확장. 외부 이벤트 기반 DAG trigger |
+| **DAG Bundles** | Airflow 3에서 DAG를 git/OCI image/스토리지 단위로 배포하는 방식 |
+| **Edge Executor** | Airflow 3 신규 Executor. 원격/엣지 워커 지원 |
 
 ---
 
@@ -42,7 +48,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 ### Confluence
 
 - **DP space — 스케줄러 폴더**: https://kakaoent.atlassian.net/wiki/spaces/DP/folder/5067145573
-  - 이 폴더의 페이지들은 [[2_Cloud Composer 2 vs Self-managed 비교]], [[3_Executor 종류 및 비교]], [[4_Queue 라우팅과 Pod 스펙 설정]], [[5_Metadata DB 운영]]로 import 완료
+  - 이 폴더의 페이지들은 [[2_Cloud Composer vs Self-managed 비교]], [[3_Executor 종류 및 비교]], [[4_Queue 라우팅과 Pod 스펙 설정]], [[5_Metadata DB 운영]]로 import 완료
 
 ### 관련 코드 레포 (로컬 경로)
 
@@ -55,7 +61,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 
 ### 공식 문서
 
-- [Cloud Composer 2 공식 문서](https://cloud.google.com/composer/docs)
+- [Cloud Composer 공식 문서](https://cloud.google.com/composer/docs) (Composer 3 기준)
 - [Airflow Executors](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html)
 - [Airflow on Kubernetes (Helm chart)](https://airflow.apache.org/docs/helm-chart/stable/index.html)
 
@@ -77,7 +83,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 
 이 폴더에서만 추가로 지키는 규칙:
 
-- **비교 노트는 항상 동일한 평가 축으로**: 운영 부담 / 자유도 / Queue 분리 / 비용 / 업그레이드 / GCP 통합 / 마이그레이션 속도. ([[2_Cloud Composer 2 vs Self-managed 비교]] 의 결정 기준 표 참고)
+- **비교 노트는 항상 동일한 평가 축으로**: 운영 부담 / 자유도 / Queue 분리 / 비용 / 업그레이드 / GCP 통합 / 마이그레이션 속도. ([[2_Cloud Composer vs Self-managed 비교]] 의 결정 기준 표 참고)
 - **PoC 항목은 [[1_개요]] 의 체크리스트에 누적**해서 적는다. 각 자료 노트에 흩어놓지 않는다.
 - **비용 추정은 USD/월 단위로 통일**. KRW 환산은 부가 정보.
 

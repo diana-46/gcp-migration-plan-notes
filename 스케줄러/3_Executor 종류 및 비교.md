@@ -85,6 +85,6 @@ Redis: Memorystore (GCP 관리)
 
 ## 관련 문서
 
-- [[2_Cloud Composer 2 vs Self-managed 비교]]
+- [[2_Cloud Composer vs Self-managed 비교]]
 - [[4_Queue 라우팅과 Pod 스펙 설정]]
 - [[5_Metadata DB 운영]]
