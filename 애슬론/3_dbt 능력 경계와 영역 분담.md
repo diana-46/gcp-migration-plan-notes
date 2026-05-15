@@ -242,6 +242,8 @@ athlon이 해야 할 일 3가지 옵션:
 
 ## 11. DataHub 통합 lineage 전략
 
+> 💡 **카탈로그 도구 선택 (DataHub vs GCP Knowledge Catalog)** 은 별도 비교: [[../스케줄러/10_DataHub vs Knowledge Catalog 비교]]. 본 섹션은 DataHub 채택 전제.
+
 세 가지 출처에서 DataHub로 lineage 들어옴:
 
 | 출처              | 도구                                     | 무엇을 보냄                                                          |

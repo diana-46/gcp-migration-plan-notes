@@ -296,6 +296,7 @@ def build_export(task_id, sql, inlets=None, outlets=None):
 ## 6. Airflow 3 Asset 활용 — 큰 이득
 
 > 💡 **Airflow Asset 자체에 대한 상세 (Dataset → Asset 진화 / AssetWatcher / AssetAlias / @asset / URI 권고 등)**: [[../스케줄러/9_Airflow Asset과 Dataset]]
+> 💡 **Lineage 도구 선택 (DataHub vs Knowledge Catalog)**: [[../스케줄러/10_DataHub vs Knowledge Catalog 비교]] — Asset URI 표준 덕에 도구 비종속이지만 우리 결정 영향 있음
 
 ### Asset 매핑
 

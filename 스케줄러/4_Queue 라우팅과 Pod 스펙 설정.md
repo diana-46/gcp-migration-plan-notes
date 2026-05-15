@@ -6,55 +6,84 @@ tags:
   - airflow
   - 스케줄러
 created: 2026-05-11
-updated: 2026-05-14
+updated: 2026-05-15
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068882427/Airflow+Queue+Pod
 ---
 
 # Queue 라우팅과 Pod 스펙 설정
 
-> CeleryKubernetesExecutor에서 task가 Celery로 갈지 K8s Pod로 갈지 어떻게 결정하나, Pod 스펙은 어떻게 차별화하나.
+> 기준: **Airflow 3 / Composer 3 (multi-executor)**. task가 Celery로 갈지 K8s Pod로 갈지 어떻게 결정하나, Pod 스펙은 어떻게 차별화하나.
 
-## 1. Celery vs Pod 라우팅: `queue` 파라미터
+## 1. Celery vs Pod 라우팅: `executor` 파라미터
 
-Airflow가 task의 "무거움"을 자동 판단하지 않는다. **작성자가 명시적으로** `queue`를 지정.
+Airflow가 task의 "무거움"을 자동 판단하지 않는다. **작성자가 명시적으로** `executor`를 지정.
 
 ```
-task의 queue 값
-├─ queue == 'kubernetes' (airflow.cfg에서 지정한 이름)
+task의 executor 값
+├─ executor == "KubernetesExecutor"
 │    → K8s Pod 생성
 │
-└─ 그 외 queue (default, sensor 등)
-     → Celery 워커가 처리
+├─ executor == "CeleryExecutor" 또는 미지정
+│    → Celery 워커가 처리 (default가 앞에 있는 executor)
+│
+└─ (옛 호환) queue == 'kubernetes' 도 K8s로 라우팅됨
 ```
 
 ### airflow.cfg
 
 ```ini
 [core]
+# 멀티 executor 등록. 첫 번째가 default.
+executor = CeleryExecutor,KubernetesExecutor
+```
+
+→ `[celery_kubernetes_executor]` 섹션이나 `kubernetes_queue` 같은 옵션은 더 이상 의미 없음.
+→ 옛날엔 K8s queue 이름이 **하나만** 가능했지만, 이제는 그 제약 없음. queue는 Celery 내부 라우팅 용도로 자유롭게 사용 가능.
+
+### 코드 예시 (Airflow 3 권장)
+
+```python
+# Celery 워커가 실행 (default)
+quick_task = BashOperator(
+    task_id='quick',
+    bash_command='echo hello',
+)
+
+# K8s Pod로 실행 — 명시적 executor 지정
+heavy_task = BashOperator(
+    task_id='heavy',
+    bash_command='dbt run --select large_model',
+    executor="KubernetesExecutor",   # ← 이게 trigger
+)
+
+# TaskFlow API
+from airflow.decorators import task
+
+@task(executor="KubernetesExecutor")
+def heavy():
+    ...
+```
+
+### 옛 방식 (Airflow 2 / CeleryKubernetesExecutor) — 참고
+
+```ini
+# airflow.cfg
+[core]
 executor = CeleryKubernetesExecutor
 
 [celery_kubernetes_executor]
-# K8s로 보낼 queue 이름 (단일 string만, 콤마로 여러 개 X)
-kubernetes_queue = kubernetes
+kubernetes_queue = kubernetes   # 이 이름의 queue로 가면 K8s
 ```
-
-K8s queue는 **하나만**. 여러 K8s queue 보내고 싶으면 같은 queue 안에서 Pod 스펙으로 차별화. (아래 참고)
-
-### 코드 예시
 
 ```python
-# Celery 워커가 실행 (기본)
-quick_task = BashOperator(
-    bash_command='echo hello',
-    # queue 안 쓰면 default → Celery
-)
-
-# K8s Pod로 실행
 heavy_task = BashOperator(
-    bash_command='dbt run --select large_model',
-    queue='kubernetes',  # ← 이게 trigger
+    queue='kubernetes',   # ← queue 이름으로 trigger
+    bash_command='...',
 )
 ```
+
+- K8s queue 이름은 **하나만** 가능
+- Airflow 3에서도 `queue='kubernetes'` 라우팅은 backward-compat로 동작하지만, 신규 코드는 `executor=` 사용 권장
 
 ### 어떤 task를 어디로 보낼지
 
@@ -92,7 +121,7 @@ airflow celery worker --queues=high_priority --concurrency=4
 
 → queue별로 worker 수, 노드 사양 다르게 가능.
 
-**Cloud Composer (2/3 공통)**: worker 단일 deployment → queue별 분리 어려움. `queue='kubernetes'`로만 Pod 분리 가능.
+**Cloud Composer**: worker 단일 deployment → queue별 분리 어려움. `executor="KubernetesExecutor"` 로만 Pod 분리 가능.
 
 ## 3. Pod 스펙 설정 방법
 
@@ -112,7 +141,7 @@ metadata:
 spec:
   containers:
     - name: base
-      image: airflow:2.x
+      image: airflow:3.x
       resources:
         requests:
           memory: "512Mi"
@@ -137,7 +166,8 @@ pod_template_file = /opt/airflow/pod_templates/pod_template.yaml
 from kubernetes.client import models as k8s
 
 heavy_task = BashOperator(
-    queue='kubernetes',
+    task_id='heavy',
+    executor="KubernetesExecutor",
     bash_command='dbt run --select huge_model',
     executor_config={
         'pod_override': k8s.V1Pod(
@@ -192,13 +222,15 @@ DAG에서:
 from common.pod_configs import SMALL, MEDIUM, LARGE, HEAVY
 
 light_task = BashOperator(
-    queue='kubernetes',
+    task_id='light',
+    executor="KubernetesExecutor",
     executor_config=SMALL,
     bash_command='echo hello',
 )
 
 heavy_task = BashOperator(
-    queue='kubernetes',
+    task_id='heavy',
+    executor="KubernetesExecutor",
     executor_config=HEAVY,
     bash_command='process_huge.py',
 )
@@ -238,8 +270,9 @@ Pool로도:
 
 ```python
 heavy_task = BashOperator(
-    pool='heavy_pool',   # 동시 5개만
-    queue='kubernetes',
+    task_id='heavy',
+    pool='heavy_pool',                # 동시 5개만
+    executor="KubernetesExecutor",
 )
 ```
 
