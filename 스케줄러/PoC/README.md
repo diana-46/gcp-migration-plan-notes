@@ -1,0 +1,267 @@
+# 스케줄러 PoC — Composer 3 호환성 검증
+
+> **목적**: 현재 사내 Airflow 셋업이 **Cloud Composer 3 (Airflow 3.1.7)** 에 옮겨질 수 있는지 검증.
+> 회의 미션 답: "Composer 가 우리 use case 를 잘 받아들이는가".
+
+## 컨텍스트
+
+| 항목 | 값 |
+|---|---|
+| Composer 환경 | 3.1.7-build (이미 셋업 완료) |
+| Airflow 버전 | **3.1.7 확정** (2 버전은 후보 X) |
+| BQ project | _(채울 자리)_ |
+| Region | asia-northeast3 |
+| 사내 셋업 분석 대상 | `~/WebstormProjects/data-platform-settings/playbooks/roles/airflow2` |
+| airflow-dags | `~/PycharmProjects/airflow-dags` |
+
+## 검증 항목 (우선순위순)
+
+| # | 항목 | 결정 영향 | 회의 시연 가치 | 시간 |
+|---|---|---|---|---|
+| 1 | **`airflow-dags` Airflow 3 호환성 grep** | ⭐⭐⭐ (코드 수정량 추정) | ⭐ (자료성) | 0.5일 |
+| 2 | **Simple DAG 1개 Composer 3 실행** | ⭐ (baseline) | ⭐⭐⭐ (가장 빠른 시연) | 0.5일 |
+| 3 | **자체 wrapper Operator → PyPI / Artifact Registry** | ⭐⭐⭐ ("사내 코드 가능?") | ⭐⭐⭐ | 1일 |
+| 4 | **Worker / Queue / Pool 패턴 검증** | ⭐⭐ (sensor:40 deferrable 전환) | ⭐⭐ | 1~2일 |
+| 5 | **DAG Bundles 동작 확인** | ⭐⭐ (배포 흐름) | ⭐⭐ | 0.5~1일 |
+| 6 | **인증 — Google Workspace 통과 가능?** | ⭐⭐⭐ (Composer vs Self 결정) | ⭐ (인터뷰 위주) | 0.5일 (사내 정책 확인) |
+| 7 | **실제 athlon DAG 1개 Composer 실행** ⭐ 시연용 | ⭐⭐ (검증) | ⭐⭐⭐ (회의 1순위) | 2~3일 |
+
+총 예상: **~7~10일** (1~2주 sprint)
+
+## 진행 상태
+
+| # | 항목 | 상태 | 노트 |
+|---|---|---|---|
+| 1 | airflow-dags Airflow 3 호환성 grep | ✅ 완료 | [[01_airflow3_compat_grep]] |
+| 2 | **DAG 배포 (GCS sync / Bundle / multi-repo)** | ✅ 완료 | [[02_dag_deployment]] |
+| 3 | **PyPI 자체 패키지 install** | ⬜ 대기 | `03_custom_operator_pypi.md` |
+| 4 | **Queue / Worker / Pool 패턴** | ⬜ 대기 | `04_worker_pool_queue.md` |
+| 5 | **모니터링 / 알림 / callback** | ⬜ 대기 | `05_monitoring_alerts.md` |
+
+각 항목은 진행하면서 별도 노트로 분리.
+
+---
+
+## 항목별 상세
+
+### Step 1. airflow-dags Airflow 3 호환성 grep
+
+**목표**: 코드 수정 인벤토리. "몇 곳에서 무엇이 깨지는지" 답.
+
+**작업**:
+
+```bash
+cd ~/PycharmProjects/airflow-dags
+
+# 폐기 패턴
+grep -rn "SubDagOperator\|SmartSensor" .
+grep -rn "schedule_interval=" .         # → schedule= 로
+grep -rn "sla=timedelta\|'sla':" .     # SLA 제거
+grep -rn "HiveOperator\|HDFS\|S3ToHdfs" .  # Hive 영역 → 폐기
+grep -rn "Kerberos\|kerberos" .
+
+# Task SDK 위반 가능성 (task 안에서 내부 모듈 import)
+grep -rn "from airflow.models import" .
+grep -rn "from airflow.utils.db" .
+
+# 사내 operator 인벤토리
+ls operators/
+grep -rn "class.*Operator(" operators/
+grep -rn "class.*Sensor(" operators/
+
+# 사내 DB / 네트워크 의존
+grep -rn "create_engine\|SQLAlchemy" .
+grep -rn "kakaocorp.com\|onkakao.net" .
+```
+
+**결과 정리**:
+- 폐기 패턴 발견 위치 / 개수
+- 사내 operator 목록 + 의존성
+- Task SDK 위반 가능 코드 위치
+- 사내 DB / 네트워크 직결 위치
+- Airflow `upgrade-check` 결과 (별도 도구)
+
+**의문 / 발견**: (진행하면서)
+
+---
+
+### Step 2. Simple DAG 1개 Composer 3 실행
+
+**목표**: Composer 환경 sanity check + DAG 배포 흐름 체감.
+
+**DAG**:
+
+```python
+# simple_hello.py
+from datetime import datetime
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+
+with DAG(
+    dag_id="hello_composer",
+    schedule="@daily",
+    start_date=datetime(2026, 5, 1),
+    catchup=False,
+    tags=["poc"],
+) as dag:
+    BashOperator(task_id="hello", bash_command="echo hello composer 3")
+```
+
+**작업**:
+- DAGs GCS bucket 에 업로드
+- Airflow UI 에서 DAG 보이는지 (1~2분 대기)
+- 수동 실행 → 성공 확인
+- Task log 확인
+
+---
+
+### Step 3. 자체 wrapper Operator → PyPI / Artifact Registry
+
+**목표**: 사내 wrapper 가 Composer 에 install 가능한지.
+
+**작업**:
+
+1. 작은 자체 operator 1개 작성:
+
+```python
+# my_operator/operators.py
+from airflow.models import BaseOperator
+
+class HelloKakaoOperator(BaseOperator):
+    def __init__(self, message: str = "안녕", **kwargs):
+        super().__init__(**kwargs)
+        self.message = message
+    def execute(self, context):
+        print(f"{self.message} kakao")
+        return self.message
+```
+
+2. `pyproject.toml`:
+
+```toml
+[project]
+name = "kakao-airflow-poc"
+version = "0.1.0"
+dependencies = ["apache-airflow>=3.0"]
+```
+
+3. 빌드:
+```bash
+python -m build
+```
+
+4. Artifact Registry private repo 생성:
+```bash
+gcloud artifacts repositories create athlon-pypi-poc \
+  --repository-format=python \
+  --location=asia-northeast3
+```
+
+5. Push:
+```bash
+twine upload --repository-url \
+  https://asia-northeast3-python.pkg.dev/PROJECT/athlon-pypi-poc/ \
+  dist/*.whl
+```
+
+6. Composer install:
+```bash
+gcloud composer environments update YOUR_ENV \
+  --location=asia-northeast3 \
+  --update-pypi-package=kakao-airflow-poc==0.1.0 \
+  --pypi-package-index=https://asia-northeast3-python.pkg.dev/PROJECT/athlon-pypi-poc/simple/
+```
+
+7. DAG 에서 import 해서 실행
+
+**검증 포인트**:
+- Composer 환경 update 시간
+- import 성공
+- 실행 성공
+- 인증 (Composer SA 가 Artifact Registry read 권한 있는지)
+
+---
+
+### Step 4. Worker / Queue / Pool 패턴 검증
+
+**목표**: 사내 5종 queue (`hadoop`/`cloud`/`http`/`sensor`/`doopey`) 가 Composer 에서 어떻게 풀리나.
+
+**작업**:
+- Composer 3 의 Celery worker 사양 / autoscale 옵션 확인
+- Airflow UI 에서 Pool 만들기 (`heavy_pool`, `sensor_pool`)
+- `executor="KubernetesExecutor"` 지정한 task 1개 → Pod 분리 확인
+- `deferrable=True` sensor 1개 동작 → Triggerer 가 처리 확인 (worker 안 잡힘)
+- Pod 사양 (`executor_config`) 차별화 확인
+
+**결과**:
+- "기존 5종 queue" → Composer 매핑 표 작성
+- `sensor:40` worker → deferrable 패턴 전환 가능성 확인
+- `cloud` queue → 단일 Celery worker 로 흡수
+
+---
+
+### Step 5. DAG Bundles 동작 확인
+
+**목표**: Airflow 3 의 DAG Bundles 가 Composer 에서 어떻게 동작하나.
+
+**작업**:
+- Composer 3 의 DAG Bundles 옵션 활성화 확인
+- bundle 1개 정의 (git repo or OCI image)
+- 환경 별 다른 bundle 사용 시도 (dev / prod)
+- 기존 GCS sync 와의 차이 확인
+
+---
+
+### Step 6. 인증 — Google Workspace 통과 가능?
+
+**목표**: 사내 LDAP 인증을 Composer IAP + Google Workspace 로 대체 가능한지 확인.
+
+**작업** (대부분 인터뷰 / 사내 정책 확인):
+- 카카오엔터 Google Workspace 계정 = 사내 ID 인지?
+- Composer IAP 통과 가능한지 본인 계정으로 테스트
+- IAM Role (`composer.user`) 부여 후 UI 접속 확인
+- 보안팀 / IDP 팀과 LDAP 대체 가능성 협의
+
+---
+
+### Step 7. 실제 athlon DAG 1개 Composer 실행 (회의 시연용)
+
+**목표**: 회의 1분 시연 ammunition.
+
+**작업**:
+- airflow-dags 에서 가장 simple DAG 선정
+- 사내 의존성 최소화 (또는 mock)
+- 자체 wrapper 포함 (Step 3 활용)
+- Composer 에서 end-to-end 실행
+- **화면 녹화** 또는 스크린샷 패키지
+
+→ "기존 코드 그대로 Composer 3 에서 돌아갑니다" 시연.
+
+---
+
+## 회의 시연 시나리오 (최종 결과물)
+
+**1~2분 데모**:
+
+1. airflow-dags 의 작은 DAG 보여줌 (코드)
+2. Composer 3 Airflow UI 에서 같은 DAG 동작 (Graph view)
+3. Task log 에서 성공 확인
+4. 자체 wrapper operator 가 거기서 실행됨 (사내 코드도 OK)
+
+**1슬라이드 요약**:
+
+- 호환성: ~80% 그대로 / ~15% 손봐야 (SLA / SubDAG / Hive) / ~5% 인프라 의존 (사내 DB / 네트워크)
+- 자체 wrapper: Artifact Registry 로 OK
+- Worker queue 5종 → Composer 패턴 매핑 가능
+- 마이그레이션 추정: 6~12주
+
+---
+
+## 관련 노트
+
+- [[../1_개요]] — 스케줄러 메인 결정
+- [[../2_Cloud Composer vs Self-managed 비교]] — 사내 셋업 호환성 분석 (Section "현 사내 Airflow 셋업 → Composer 3 호환성")
+- [[../4_Queue 라우팅과 Pod 스펙 설정]] — Queue / Pod 패턴
+- [[../8_Composer 권한 및 인증]] — 인증 관련
+- [[../9_Airflow Asset과 Dataset]] — Airflow 3 Asset (Step 4~5 에 활용)
+- [[../../애슬론/PoC/README]] — 별도 PoC (dbt / Asset-Centric / 패러다임 검증) — **본 PoC 통과 후** 진행
