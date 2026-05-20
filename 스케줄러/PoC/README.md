@@ -35,7 +35,7 @@
 | 1 | airflow-dags Airflow 3 호환성 grep | ✅ 완료 | [[01_airflow3_compat_grep]] |
 | 2 | **DAG 배포 (GCS sync / Bundle / multi-repo)** | ✅ 완료 | [[02_dag_deployment]] |
 | 3 | **PyPI 자체 패키지 install** | ✅ 완료 | [[03_custom_operator_pypi]] |
-| 4 | **Queue / Worker / Pool 패턴** | ⬜ 대기 | `04_worker_pool_queue.md` |
+| 4 | **Queue / Worker / Pool 패턴** | ✅ 완료 | [[04_worker_pool_queue]] |
 | 5 | **모니터링 / 알림 / callback** | ⬜ 대기 | `05_monitoring_alerts.md` |
 
 각 항목은 진행하면서 별도 노트로 분리.
@@ -144,21 +144,29 @@ wheel build → twine upload → AR push
 
 ---
 
-### Step 4. Worker / Queue / Pool 패턴 검증
+### Step 4. Worker / Queue / Pool 패턴 검증 ✅ 완료
 
-**목표**: 사내 5종 queue (`hadoop`/`cloud`/`http`/`sensor`/`doopey`) 가 Composer 에서 어떻게 풀리나.
+> 상세 결과: [[04_worker_pool_queue]]
 
-**작업**:
-- Composer 3 의 Celery worker 사양 / autoscale 옵션 확인
-- Airflow UI 에서 Pool 만들기 (`heavy_pool`, `sensor_pool`)
-- `executor="KubernetesExecutor"` 지정한 task 1개 → Pod 분리 확인
-- `deferrable=True` sensor 1개 동작 → Triggerer 가 처리 확인 (worker 안 잡힘)
-- Pod 사양 (`executor_config`) 차별화 확인
+**검증 질문**: 사내 5종 queue (`hadoop`/`cloud`/`http`/`sensor`/`doopey`) 가 Composer 3 에서 어떻게 매핑되나?
 
-**결과**:
-- "기존 5종 queue" → Composer 매핑 표 작성
-- `sensor:40` worker → deferrable 패턴 전환 가능성 확인
-- `cloud` queue → 단일 Celery worker 로 흡수
+**핵심 발견 5가지**:
+
+1. ⚠️ **`task.queue='foo'` 가 묵음 실패** — `default` 외 queue 의 task 는 에러 없이 영원히 queued. 마이그레이션 시 모든 `queue=` 파라미터 제거 필수.
+2. ⚠️ **KubernetesExecutor cold start 7분 46초 측정** — Autopilot 노드 provisioning + image pull. Idle 시 노드 즉시 deprovision → warm start 불가. **분 단위 task 에 사실상 사용 불가**.
+3. ✅ **Celery worker autoscale 정상** (1→3 까지 관찰). 모니터링 탭의 "Celery Executor 작업자" 화면이 kubectl 의 실용적 대체.
+4. ✅ **Deferrable sensor + Triggerer 정상** — worker 0 점유로 처리. `sensor:40` 패턴의 답.
+5. ✅ **Airflow Pool 정상** — slot 수 정확히 강제. capacity 우회 가능.
+
+**5종 queue 매핑 결과**:
+- `hadoop` / `doopey` → 폐기 (Hive 종료)
+- `cloud` / `http` → Celery worker 흡수 + **`queue=` 파라미터 제거 필수**
+- `sensor:40` → deferrable Sensor + Triggerer (글로벌 `default_deferrable=True` 추천) ⭐
+- heavy task → KubernetesExecutor 비추, Celery worker 사양 상향 권장
+
+**마이그레이션 추정 (queue 영역)**: 2.5~4.5주
+
+**회의 메시지**: 사실상 사내 케이스는 **Celery + Triggerer 만으로 충분**. K8sExecutor 안 써도 됨. 단 `queue=` 파라미터 제거가 묵음 함정의 핵심 작업.
 
 ---
 
