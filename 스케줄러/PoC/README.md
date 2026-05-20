@@ -34,7 +34,7 @@
 |---|---|---|---|
 | 1 | airflow-dags Airflow 3 호환성 grep | ✅ 완료 | [[01_airflow3_compat_grep]] |
 | 2 | **DAG 배포 (GCS sync / Bundle / multi-repo)** | ✅ 완료 | [[02_dag_deployment]] |
-| 3 | **PyPI 자체 패키지 install** | ⬜ 대기 | `03_custom_operator_pypi.md` |
+| 3 | **PyPI 자체 패키지 install** | ✅ 완료 | [[03_custom_operator_pypi]] |
 | 4 | **Queue / Worker / Pool 패턴** | ⬜ 대기 | `04_worker_pool_queue.md` |
 | 5 | **모니터링 / 알림 / callback** | ⬜ 대기 | `05_monitoring_alerts.md` |
 
@@ -115,70 +115,32 @@ with DAG(
 
 ---
 
-### Step 3. 자체 wrapper Operator → PyPI / Artifact Registry
+### Step 3. 자체 wrapper Operator → PyPI / Artifact Registry ✅ 완료
 
-**목표**: 사내 wrapper 가 Composer 에 install 가능한지.
+> 상세 결과: [[03_custom_operator_pypi]]
 
-**작업**:
+**검증 질문**: 사내 custom operator(wheel) 를 Composer 3 에 install 가능한가?
 
-1. 작은 자체 operator 1개 작성:
+**결론**: ✅ **가능. 단 Artifact Registry + pip.conf 조합 필수.**
 
-```python
-# my_operator/operators.py
-from airflow.models import BaseOperator
+**발견한 함정 3개** (PoC 핵심 가치):
 
-class HelloKakaoOperator(BaseOperator):
-    def __init__(self, message: str = "안녕", **kwargs):
-        super().__init__(**kwargs)
-        self.message = message
-    def execute(self, context):
-        print(f"{self.message} kakao")
-        return self.message
+1. **wheel `file://` 참조 차단** — UI/CLI 둘 다 PEP 508 URL specifier 거부. self-hosted 식 GCS `file://` trick 불가 → AR 강제
+2. **`PIP_EXTRA_INDEX_URL` env var 가 빌드 컨텍스트에 전달 안 됨** — 환경 변수 설정만으로 안 풀림. `gs://<env-bucket>/config/pip/pip.conf` 직접 업로드 필수 (콘솔 UI 진입점 없음 ⚠️). 실패 메시지가 `(from versions: none)` 으로 위장돼 디버깅 함정
+3. **`keyrings.google-artifactregistry-auth` base image 에 없음** — requirements 에 명시 필수
+
+**검증 흐름** (실제 통과):
+```
+wheel build → twine upload → AR push
+  → pip.conf 업로드 (config/pip/pip.conf)
+  → PyPI 패키지: keyrings.google-artifactregistry-auth + kakao-airflow-poc==0.1.0
+  → SA 에 artifactregistry.reader
+  → DAG trigger → log: "안녕 kakao from Composer (kakao-airflow-poc 0.1.0)" ✅
 ```
 
-2. `pyproject.toml`:
+**회의 메시지**: 사내 wheel 운영은 **AR + pip.conf** 셋업 1회면 그 뒤로는 `twine upload` + PyPI 패키지 등록만으로 자동화 가능. 기존 sendbag-wheel 패턴 대비 인증/버전관리/공유 측면에서 깔끔.
 
-```toml
-[project]
-name = "kakao-airflow-poc"
-version = "0.1.0"
-dependencies = ["apache-airflow>=3.0"]
-```
-
-3. 빌드:
-```bash
-python -m build
-```
-
-4. Artifact Registry private repo 생성:
-```bash
-gcloud artifacts repositories create athlon-pypi-poc \
-  --repository-format=python \
-  --location=asia-northeast3
-```
-
-5. Push:
-```bash
-twine upload --repository-url \
-  https://asia-northeast3-python.pkg.dev/PROJECT/athlon-pypi-poc/ \
-  dist/*.whl
-```
-
-6. Composer install:
-```bash
-gcloud composer environments update YOUR_ENV \
-  --location=asia-northeast3 \
-  --update-pypi-package=kakao-airflow-poc==0.1.0 \
-  --pypi-package-index=https://asia-northeast3-python.pkg.dev/PROJECT/athlon-pypi-poc/simple/
-```
-
-7. DAG 에서 import 해서 실행
-
-**검증 포인트**:
-- Composer 환경 update 시간
-- import 성공
-- 실행 성공
-- 인증 (Composer SA 가 Artifact Registry read 권한 있는지)
+**시연 자료**: AR 패키지 등록 화면 + DAG UI parsing 성공 화면 + task log success 화면 3장.
 
 ---
 
@@ -251,7 +213,7 @@ gcloud composer environments update YOUR_ENV \
 **1슬라이드 요약**:
 
 - 호환성: ~80% 그대로 / ~15% 손봐야 (SLA / SubDAG / Hive) / ~5% 인프라 의존 (사내 DB / 네트워크)
-- 자체 wrapper: Artifact Registry 로 OK
+- 자체 wrapper: **Artifact Registry + pip.conf 셋업 후 OK** (함정 3개 — [[03_custom_operator_pypi]] 참조)
 - Worker queue 5종 → Composer 패턴 매핑 가능
 - 마이그레이션 추정: 6~12주
 
