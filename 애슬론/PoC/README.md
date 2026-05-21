@@ -46,7 +46,9 @@
 - [ ] 각 패턴의 Airflow Grid view 비교
 - [ ] DataHub lineage 가 어떻게 들어오는지 확인
 
-기록: `03_dbt_airflow_integration.md` (TBD)
+> ⚠️ **방향 좁힘 (2026-05-21)**: BQ 이관 확정 + [[02_dbt_render_in_composer]] 에서 Cosmos 패턴 검증 완료 → Pattern A/B 는 후순위. **Pattern C (Cosmos + BQ adapter) 실 실행** 으로 진행.
+>
+> 기록: [[03_bq_dbt_run_in_composer]]
 
 ### Step 4. DataHub 연동
 
@@ -106,8 +108,8 @@ created: YYYY-MM-DD
 | Step | 상태 | 비고 |
 |---|---|---|
 | 1. Airflow 3 Asset | ⬜ 대기 | |
-| 2. dbt + BQ | ⬜ 대기 | |
-| 3. dbt + Airflow 통합 | ⬜ 대기 | |
+| **2. dbt 렌더링 (사내 mlb-dbt 로)** | ✅ **완료** | [[02_dbt_render_in_composer]] — Cosmos 로 39 모델 → 60+ task 자동 분해 확인 |
+| **3. dbt-bigquery + 실제 dbt run on Composer** | 🚧 **진행 중** | [[03_bq_dbt_run_in_composer]] — BQ adapter 로 Phase 1 (로컬 셋업) 진행 중. Trino→BQ 매핑 + 사내 운영 패턴 이식 |
 | 4. DataHub 연동 | ⬜ 대기 | |
 | 5. Asset-Centric prototype | ⬜ 대기 | |
 | 6. 사고법 학습 (병행) | ⬜ 대기 | |

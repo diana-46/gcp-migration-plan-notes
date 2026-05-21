@@ -295,3 +295,9 @@ composer-poc-pkg/
 | D | 빌드 로그 정독 → `No custom pip.conf file found.` 발견 | 진짜 원인 잡힘 | 함정 2 가설 확정 |
 | D | `gs://<bucket>/config/pip/pip.conf` 업로드 | 환경 update 성공 | 함정 회피 완료 |
 | D 14:47 | DAG `poc_custom_pkg` trigger | ✅ Success, log: `안녕 kakao from Composer (kakao-airflow-poc 0.1.0)` | end-to-end 검증 완료 |
+
+
+
+
+* ip로 제한하는 버킷이 있음. (네트워크를 워커별로 설정할 수 있을지 확인 (서브넷 설정))
+* 

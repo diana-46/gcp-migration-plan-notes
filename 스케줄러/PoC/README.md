@@ -235,3 +235,8 @@ wheel build → twine upload → AR push
 - [[../8_Composer 권한 및 인증]] — 인증 관련
 - [[../9_Airflow Asset과 Dataset]] — Airflow 3 Asset (Step 4~5 에 활용)
 - [[../../애슬론/PoC/README]] — 별도 PoC (dbt / Asset-Centric / 패러다임 검증) — **본 PoC 통과 후** 진행
+
+
+권한
+네트워크 설정 상세 가능한지
+dbt 테스트
