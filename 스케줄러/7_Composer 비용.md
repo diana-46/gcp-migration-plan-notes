@@ -28,17 +28,18 @@ updated: 2026-05-15
 
 Self-managed든 Composer든 결국 **GKE / GCE + Cloud SQL + Memorystore + GCS** 를 쓰는 건 똑같다. 차이는 **누가 청구서를 받느냐** 와 **얼마의 마크업이 붙느냐**.
 
-| 항목 | Self-managed | Composer 3 | 청구 차이 |
-|---|---|---|---|
-| **Compute (vCPU)** | GCE 단가 직접 결제 (~$0.05/vCPU-hr 수준) | Composer SKU (~$0.074/vCPU-hr 수준) | **+30~50% 마크업** |
-| **Memory** | GCE 단가 (instance에 포함) | Composer SKU (~$0.008/GB-hr) | **+15~20% 마크업** |
-| **GKE 클러스터 fee** | $73/mo (Standard) | Composer가 흡수 (별도 청구 없음) | 비등 |
-| **Cloud SQL (Metadata DB)** | 직접 프로비저닝 / 결제 | Composer가 관리하지만 동일 단가 청구 | **거의 같음** |
-| **Memorystore Redis (Celery)** | 직접 프로비저닝 / 결제 | Composer가 관리하지만 동일 단가 청구 | **거의 같음** |
-| **GCS (DAG/log)** | 직접 결제 | 동일 단가 | 거의 같음 |
-| **Load Balancer / 네트워크** | 직접 결제 | Composer가 일부 흡수 | 거의 같음 |
-| **Spot/Preemptible 노드** | ✅ 사용 가능 (compute -60~70%) | ❌ Composer 관리 컴포넌트에는 불가 | **Self-managed 유리** |
-| **CUD (1년/3년 약정)** | ✅ compute -25%/-55% | △ 일부 SKU만 제한적 적용 | **Self-managed 유리** |
+| 항목                             | Self-managed                     | Composer 3                        | 청구 차이               |
+| ------------------------------ | -------------------------------- | --------------------------------- | ------------------- |
+| **Compute (vCPU)**             | GCE 단가 직접 결제 (~$0.05/vCPU-hr 수준) | Composer SKU (~$0.074/vCPU-hr 수준) | **+30~50% 마크업**     |
+| **Memory**                     | GCE 단가 (instance에 포함)            | Composer SKU (~$0.008/GB-hr)      | **+15~20% 마크업**     |
+| **GKE 클러스터 fee**               | $73/mo (Standard)                | Composer가 흡수 (별도 청구 없음)           | 비등                  |
+| **Cloud SQL (Metadata DB)**    | 직접 프로비저닝 / 결제                    | Composer가 관리하지만 동일 단가 청구          | **거의 같음**           |
+| **Memorystore Redis (Celery)** | 직접 프로비저닝 / 결제                    | Composer가 관리하지만 동일 단가 청구          | **거의 같음**           |
+| **GCS (DAG/log)**              | 직접 결제                            | 동일 단가                             | 거의 같음               |
+| **Load Balancer / 네트워크**       | 직접 결제                            | Composer가 일부 흡수                   | 거의 같음               |
+| **Spot/Preemptible 노드**        | ✅ 사용 가능 (compute -60~70%)        | ❌ Composer 관리 컴포넌트에는 불가           | **Self-managed 유리** |
+| **CUD (1년/3년 약정)**             | ✅ compute -25%/-55%              | △ 일부 SKU만 제한적 적용                  | **Self-managed 유리** |
+|                                |                                  |                                   |                     |
 
 → **결국 차이는 "compute 부분에 붙는 관리 마크업" + "할인 적용 가능 범위"**. DB/Redis/Storage는 어차피 똑같이 결제.
 
