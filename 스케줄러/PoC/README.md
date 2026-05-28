@@ -37,6 +37,7 @@
 | 3 | **PyPI 자체 패키지 install** | ✅ 완료 | [[03_custom_operator_pypi]] |
 | 4 | **Queue / Worker / Pool 패턴** | ✅ 완료 | [[04_worker_pool_queue]] |
 | 5 | **모니터링 / 알림 / callback** | ⬜ 대기 | `05_monitoring_alerts.md` |
+| 6 | **인증 / 권한 (Workspace + IAM + Airflow RBAC)** | ✅ 완료 | [[../8_Composer 권한 및 인증]] 검증된 사실 반영 |
 
 각 항목은 진행하면서 별도 노트로 분리.
 
@@ -182,15 +183,42 @@ wheel build → twine upload → AR push
 
 ---
 
-### Step 6. 인증 — Google Workspace 통과 가능?
+### Step 6. 인증 / 권한 — Google Workspace + GCP IAM + Airflow RBAC ✅ 완료
 
-**목표**: 사내 LDAP 인증을 Composer IAP + Google Workspace 로 대체 가능한지 확인.
+> 상세 결과: [[../8_Composer 권한 및 인증]]
 
-**작업** (대부분 인터뷰 / 사내 정책 확인):
-- 카카오엔터 Google Workspace 계정 = 사내 ID 인지?
-- Composer IAP 통과 가능한지 본인 계정으로 테스트
-- IAM Role (`composer.user`) 부여 후 UI 접속 확인
-- 보안팀 / IDP 팀과 LDAP 대체 가능성 협의
+**검증 질문**: Composer 3 + Airflow 3.1.7의 권한 모델이 어떻게 동작하나? 사내 LDAP을 Workspace로 대체하면서 권한 관리도 깔끔히 굴릴 수 있나?
+
+**결론**: ✅ **2.x FAB RBAC 거의 그대로 + Google SSO + IAM 통합. 운영 부담 매우 낮음.**
+
+**핵심 발견 5가지**:
+
+1. ✅ **FAB Auth Manager 살아있음** — `airflow users` / `airflow roles` CLI, Security UI 메뉴, 기본 5 Role(Admin/Op/User/Viewer/Public) 모두 정상. 처음엔 "Airflow 3.x에서 권한 모델이 새로 바뀌었다"고 추측했으나 PoC로 정정됨.
+
+2. ✅ **`composer_auth_user_registration_role` 신규 config** — Composer 3가 추가한 키. 기본 `Op` → `Viewer` 로 변경 권장. 적용 시 신규 사용자는 자동 Viewer (안전한 default).
+
+3. ✅ **Admin Role → Security UI 메뉴 노출** — 표준 FAB 동작. Composer가 UI 강제로 숨기는 게 아니라 권한 없으면 자연스럽게 안 보일 뿐. 스크린샷 확보.
+
+4. ✅ **GCP IAM과 Airflow RBAC는 별개 레이어** — IAM = UI 접근 게이트 / Airflow Role = UI 안에서 가능한 액션. 두 레이어가 AND로 적용됨.
+
+5. ⚠ **사용자 삭제 ≠ 차단** — 메타DB row 삭제해도 다음 로그인 시 자동 재등록 + 새 default Role. 실측 검증됨. 차단은 IAM 회수 또는 Role을 `Public` 으로.
+
+**일상 운영 SOP**:
+
+| 시나리오 | 액션 |
+|---|---|
+| 신규 입사 | IAM `composer.user` 부여 → 첫 로그인 시 자동 Viewer |
+| 권한 승격 | UI Security 메뉴 또는 `users add-role` |
+| 퇴사 | IAM 회수 (⚠ 최대 12시간 캐시) |
+| 즉시 차단 | Workspace 계정 정지 + Airflow Role `Public` + IAM 회수 |
+
+**잔여 검증** (회의 이후 진행 가능):
+- DAG `access_control` 속성 동작 여부 (DAG 단위 격리 가능성)
+- 폴더별 자동 Role 등록 (`rbac_autoregister_per_folder_roles`) 동작
+- IAM Role × Airflow Role 우선순위
+- IAM 회수 후 12시간 캐시 실측
+
+**회의 메시지**: 권한 관리는 Composer 3에서 가장 부담 낮은 영역. Workspace SSO + IAM Role 부여만으로 신규 사용자는 자동 Viewer로 시작, 필요시 Security UI에서 클릭 몇 번으로 승격. 사내 LDAP 대체 가능 여부는 Workspace 통합 인터뷰 결과에 따라 결정.
 
 ---
 
