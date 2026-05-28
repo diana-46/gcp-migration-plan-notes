@@ -1,12 +1,12 @@
 ---
 title: "Queue 라우팅과 Pod 스펙 설정"
-status: draft
+status: verified
 tags:
   - confluence
   - airflow
   - 스케줄러
 created: 2026-05-11
-updated: 2026-05-15
+updated: 2026-05-28
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068882427/Airflow+Queue+Pod
 ---
 
@@ -237,6 +237,76 @@ heavy_task = BashOperator(
 ```
 
 → DAG 작성자는 어떤 사이즈를 쓸지만 고민.
+
+### 3-4. PoC 검증 결과 (Composer 3 + Airflow 3.1.7)
+
+> 환경: `test-airflow3` / asia-northeast3, 2026-05-28. DAG: `poc_pod_presets.py` (4 프리셋 + baseline + node_selector).
+
+#### ✅ pod_override 정상 동작
+
+모니터링 탭 "Kubernetes 실행자 작업자" 화면에서 사양 차별화 확인:
+
+| Pod | 요청 (CPU / Mem) | 실측 CPU | 실측 Memory | 일치? |
+|---|---|---|---|---|
+| baseline | (default) | 0.25 | 2GB | — |
+| t1_small | 0.5 / 1Gi | **0.5** | 2GB | CPU ✅ / Mem +1GB |
+| t2_medium | 2.0 / 4Gi | **2.0** | 5GB | CPU ✅ / Mem +1GB |
+| t3_large | 4.0 / 8Gi | **4.0** | 9GB | CPU ✅ / Mem +1GB |
+| t4_node_selector | 1.0 / 2Gi | **1.0** | 3GB | CPU ✅ / Mem +1GB |
+
+→ **CPU는 요청한 그대로 정확히 매칭, 메모리는 모든 경우 +1GB 일관 오버헤드**.
+
+#### ⚠ 메모리 +1GB 오버헤드
+
+모니터링 탭의 메모리 표시 = **Pod 총합** (base 컨테이너 + Airflow worker / sidecar 오버헤드 합산)으로 추정.
+
+**실무 영향**:
+- 프리셋 메모리 정할 때 **"노드 입장 점유 = 요청 + 1GB"** 로 capacity planning
+- task가 실제 쓸 수 있는 메모리는 `requests.memory` 그대로 (sidecar 1GB 는 별도 컨테이너 limit)
+- 예: SMALL `memory='1Gi'` 요청 → task는 1GB 사용 가능 / 노드에선 2GB 점유
+
+#### 🤔 node_selector — 무시되는 것으로 보임
+
+`node_selector={'workload': 'heavy'}` 명시한 t4 도 **정상 완료** (Pending stuck 아님).
+
+3가지 가능성 중 가장 유력:
+- A. Composer가 unknown nodeSelector 라벨을 **silent하게 무시** (가능성 ⭐⭐⭐)
+- B. Composer 환경에 `workload=heavy` 라벨 가진 노드가 우연히 존재 (가능성 ⭐)
+- C. K8s scheduler가 soft preference로 처리 (가능성 ⭐)
+
+PoC 시간 절약을 위해 더 깊이 검증하지 않음. **실무 결론은 동일**:
+> **Composer 3에서 `node_selector` 로 노드 풀 분리 (GPU/spot/heavy) 는 사용 불가로 간주**. 사양 차별화는 메모리/CPU 만 가능.
+
+#### ⚠ Container 내부에서 cgroup limit 직접 못 읽음
+
+t1_small task log:
+```
+cat /sys/fs/cgroup/memory.max                          → No such file or directory
+cat /sys/fs/cgroup/memory/memory.limit_in_bytes        → No such file or directory
+nproc                                                   → 2 (CPU limit과 무관, 노드 CPU 수)
+```
+
+→ Composer 3 K8sExecutor Pod는 **sandboxed 환경** (gVisor 또는 보안 정책)에서 동작. 컨테이너 내부 진단 도구로 limit 확인 불가.
+
+검증이 필요하면 **모니터링 탭의 사양 표시** 또는 **실제 메모리 할당 → OOM 측정** 방식으로 우회.
+
+#### 권장 프리셋 (Composer 3 기준 조정)
+
+기본 5단계 그대로 유효. 단 메모리 정할 때 "노드 점유 = 요청 + 1GB" 인지 의식:
+
+```python
+SMALL  = pod_config(memory='1Gi',  cpu='0.5')   # 노드 점유 ~2GB
+MEDIUM = pod_config(memory='4Gi',  cpu='2')     # 노드 점유 ~5GB
+LARGE  = pod_config(memory='8Gi',  cpu='4')     # 노드 점유 ~9GB
+HEAVY  = pod_config(memory='16Gi', cpu='8')     # 노드 점유 ~17GB
+# GPU / node_selector 기반 분리 — Composer 3 에선 사용 불가
+```
+
+⚠ Step 4 PoC ([[PoC/04_worker_pool_queue]]) 의 K8sExecutor cold start 7~10분 함정 그대로 유효. 분 단위 task에는 프리셋 무의미 — Celery worker 사양 상향이 나음.
+
+#### 회의 메시지
+
+> **Pod 프리셋 패턴은 Composer 3에서도 사용 가능. CPU/메모리 사양 차별화 정상 동작. 단 (1) 노드 풀 분리 (`node_selector`) 는 불가, (2) 메모리는 +1GB 오버헤드 의식, (3) K8sExecutor cold start 7~10분이라 프리셋의 실효성은 매우 무거운 task에만.**
 
 ## 4. Pod 많을 때의 부담
 
