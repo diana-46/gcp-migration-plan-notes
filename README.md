@@ -179,3 +179,4 @@ source: <원본 URL, import한 경우만>
 
 - [[스케줄러/1_개요]] — Airflow 스케줄러 (Composer vs Self-managed) + Airflow에서 dbt 실행 · 컨텍스트: [[스케줄러/README]]
 - [[애슬론/1_개요]] — athlon 플랫폼 재구현 (dbt 수용 / Userlake BQ 전환 / extract / workflows) · 컨텍스트: [[애슬론/README]]
+# diana-notes
