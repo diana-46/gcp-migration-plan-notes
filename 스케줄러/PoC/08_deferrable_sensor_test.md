@@ -75,13 +75,13 @@ with DAG(
 
 ### 핵심 설계
 
-| 변수 | 선택 / 의도 |
-|---|---|
-| `TimeDeltaSensor` | 가장 단순한 sensor — 외부 의존성 없이 시간만 대기 |
-| `delta=20분` | **충분히 긴 대기 시간** — Triggerer 토스를 확실히 유도 (짧으면 trigger 진입 전에 끝남) |
-| 같은 DAG 안 2 task 병렬 | UI 에서 동시 비교 가능, 환경 변수 동일 |
+| 변수                    | 선택 / 의도                                                             |
+| --------------------- | ------------------------------------------------------------------- |
+| `TimeDeltaSensor`     | 가장 단순한 sensor — 외부 의존성 없이 시간만 대기                                    |
+| `delta=20분`           | **충분히 긴 대기 시간** — Triggerer 토스를 확실히 유도 (짧으면 trigger 진입 전에 끝남)       |
+| 같은 DAG 안 2 task 병렬    | UI 에서 동시 비교 가능, 환경 변수 동일                                            |
 | Airflow 3 import path | `airflow.providers.standard.sensors.time_delta` (deprecation 경고 우회) |
-| `schedule=None` | 수동 trigger 로 테스트 |
+| `schedule=None`       | 수동 trigger 로 테스트                                                    |
 
 ## 실행 방법
 
