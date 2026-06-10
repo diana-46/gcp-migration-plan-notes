@@ -8,6 +8,7 @@ on:
       - '**/*.md'
       - '.github/workflows/sync-to-confluence.yml'
       - '.github/scripts/sync_to_confluence.py'
+      - '.github/confluence-mapping.json'
   workflow_dispatch:
     inputs:
       full_sync:

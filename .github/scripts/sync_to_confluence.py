@@ -12,12 +12,16 @@ Obsidian Vault의 .md 파일을 Confluence 페이지로 동기화한다.
   CONFLUENCE_BASE_URL      예) https://your-domain.atlassian.net
   CONFLUENCE_EMAIL         API Token을 발급받은 사용자 이메일
   CONFLUENCE_API_TOKEN     https://id.atlassian.com/manage-profile/security/api-tokens
-  CONFLUENCE_SPACE_KEY     동기화 대상 Confluence Space Key (예: GCPMIG)
-  CONFLUENCE_ROOT_PAGE_ID  (선택) 최상위 부모 페이지 ID. 없으면 Space 루트에 생성
+  CONFLUENCE_SPACE_KEY     동기화 대상 Confluence Space Key (예: DP)
+  CONFLUENCE_ROOT_PAGE_ID  (선택) 매핑에 없는 top-level 폴더의 기본 부모 ID
+
+폴더-부모 매핑:
+  .github/confluence-mapping.json 의 "folders" 키 참고
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -47,6 +51,23 @@ API = f"{BASE_URL}/wiki/rest/api"
 
 # 동기화 대상 외 경로
 EXCLUDED_DIRS = {".git", ".github", ".obsidian", ".claude", ".claudian"}
+
+# ---------------------------------------------------------------------------
+# 폴더 매핑 로드
+# ---------------------------------------------------------------------------
+MAPPING_PATH = Path(".github/confluence-mapping.json")
+
+
+def load_folder_mapping() -> dict[str, str]:
+    """top-level 폴더명 → Confluence 부모 ID 매핑 로드."""
+    if not MAPPING_PATH.exists():
+        return {}
+    data = json.loads(MAPPING_PATH.read_text(encoding="utf-8"))
+    folders = data.get("folders", {}) or {}
+    return {str(k): str(v) for k, v in folders.items()}
+
+
+FOLDER_MAPPING = load_folder_mapping()
 
 
 # ---------------------------------------------------------------------------
@@ -197,11 +218,23 @@ _folder_cache: dict[tuple[str, ...], str | None] = {}
 
 
 def ensure_folder_page(parts: tuple[str, ...]) -> str | None:
-    """경로의 디렉토리들에 해당하는 부모 페이지를 만들고 가장 안쪽 id를 반환한다."""
+    """경로의 디렉토리들에 해당하는 부모 페이지를 만들고 가장 안쪽 id를 반환한다.
+
+    - parts[0] (vault top-level 폴더)가 FOLDER_MAPPING에 있으면 해당 Confluence ID를
+      그대로 부모로 사용하고, 별도의 "폴더 페이지"는 생성하지 않는다.
+    - 그 외 하위 폴더는 일반 페이지로 생성하여 트리를 구성한다.
+    """
     if not parts:
         return ROOT_PAGE_ID
     if parts in _folder_cache:
         return _folder_cache[parts]
+
+    # top-level 매핑에 해당하면 즉시 매핑된 ID 반환
+    if len(parts) == 1 and parts[0] in FOLDER_MAPPING:
+        mapped = FOLDER_MAPPING[parts[0]]
+        print(f"  ↳ mapped top-level '{parts[0]}' → {mapped}")
+        _folder_cache[parts] = mapped
+        return mapped
 
     parent_id = ensure_folder_page(parts[:-1])
     title = parts[-1]
@@ -247,6 +280,10 @@ def sync_file(path: Path) -> None:
 
 
 def main() -> int:
+    print(f"[sync] folder mapping loaded: {FOLDER_MAPPING or '(empty)'}")
+    if ROOT_PAGE_ID:
+        print(f"[sync] default root page id: {ROOT_PAGE_ID}")
+
     if FULL_SYNC or EVENT_NAME == "workflow_dispatch":
         files = get_all_md_files()
         mode = "FULL"

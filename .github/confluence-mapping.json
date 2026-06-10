@@ -1,0 +1,7 @@
+{
+  "_comment": "Vault의 top-level 폴더 → Confluence 부모(folder 또는 page) ID 매핑. 값은 ID 문자열 또는 숫자.",
+  "folders": {
+    "스케줄러": "5067145573",
+    "애슬론": "5067212363"
+  }
+}
