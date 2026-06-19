@@ -72,13 +72,13 @@ updated: 2026-06-08
 
 패키징 후보:
 
-| 모듈 | 파일 수 | 외부 의존 |
-|---|---|---|
-| `operators/` | 14개 (BigqueryQuerySensor, AthlonQuerySensor, NabiSignalProduceOperator, ...) | airflow providers 다수 |
-| `sender/` | `send_slack_message`, `config` 등 | Slack SDK / HTTP_PROXY |
-| `macros/` | `user_defined_macros` (다수 DAG 에서 import) | - |
-| `common_project/` | (확인 필요) | - |
-| `utils/` | repr_utils 등 | - |
+| 모듈                | 파일 수                                                                         | 외부 의존                  |
+| ----------------- | ---------------------------------------------------------------------------- | ---------------------- |
+| `operators/`      | 14개 (BigqueryQuerySensor, AthlonQuerySensor, NabiSignalProduceOperator, ...) | airflow providers 다수   |
+| `sender/`         | `send_slack_message`, `config` 등                                             | Slack SDK / HTTP_PROXY |
+| `macros/`         | `user_defined_macros` (다수 DAG 에서 import)                                     | -                      |
+| `common_project/` | (확인 필요)                                                                      | -                      |
+| `utils/`          | repr_utils 등                                                                 | -                      |
 
 → `operators/` 가 `sender/`, `macros/` 에 의존하므로 **함께 패키지화하거나 별도 패키지로 분리** 두 가지 결정 필요. 1차 안은 **단일 패키지에 sub-module 로 묶기**.
 
@@ -456,3 +456,5 @@ def get_provider_info() -> dict:
 - [keyrings.google-artifactregistry-auth](https://pypi.org/project/keyrings.google-artifactregistry-auth/)
 - [Airflow Provider Packages](https://airflow.apache.org/docs/apache-airflow-providers/index.html)
 - [Composer 3 PyPI packages](https://cloud.google.com/composer/docs/composer-3/install-python-dependencies)
+
+

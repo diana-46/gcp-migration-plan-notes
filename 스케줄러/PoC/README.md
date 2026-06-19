@@ -41,6 +41,7 @@
 | 7 | **Pod 프리셋 (executor_config / pod_override)** | ✅ 완료 | [[../4_Queue 라우팅과 Pod 스펙 설정#3-4. PoC 검증 결과 Composer 3 Airflow 3.1.7]] 에 직접 반영 |
 | 8 | **Deferrable Sensor 동작 검증** (Traditional vs Triggerer) | 🟡 진행 중 | [[08_deferrable_sensor_test]] — [[../7_2_리소스 다이어트 포인트]] 의 전제 검증 |
 | 9 | **환경 Snapshot 범위 + 업그레이드 롤백** | 🟡 진행 중 | [[09_snapshot_and_rollback]] — 백업 전략 + 롤백 SOP |
+| 10 | **apache-airflow-providers 규격 패키지** | 🟡 진행 중 | [[10_provider_package_test]] — UI 자동 등록 / Connection type 자동 발견 검증 |
 
 각 항목은 진행하면서 별도 노트로 분리.
 
