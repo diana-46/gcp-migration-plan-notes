@@ -110,6 +110,69 @@ models:
 
 ---
 
+## 2-3-1. 스키마 체크 끄기
+
+운영 초기 / 사고 복구 / 의도적 느슨 운영 시 두 체크를 끌 수 있음.
+
+### 두 체크의 역할
+
+| 체크 | 비교 대상 | 비활성화 값 |
+|---|---|---|
+| `contract` | SQL output ↔ schema.yml | `{'enforced': false}` |
+| `on_schema_change` | SQL output ↔ BQ 실제 테이블 | `'ignore'` (default) |
+
+### 모델 단위로 끄기
+
+```sql
+{{ config(
+    contract={'enforced': false},      -- 또는 줄 자체 제거
+    on_schema_change='ignore',         -- 또는 줄 자체 제거 (default 가 ignore)
+) }}
+```
+
+### 프로젝트 전역 default
+
+`dbt_project.yml`:
+```yaml
+models:
+  dbt_test:
+    +contract:
+      enforced: false
+    +on_schema_change: ignore
+```
+
+→ 그 다음 개별 모델에서 `+enforced: true` 로 일부만 켤 수도 있음.
+
+### 조건부 (vars 로 토글)
+
+```sql
+{{ config(
+    contract={'enforced': var('strict_mode', false)},
+    on_schema_change=('fail' if var('strict_mode', false) else 'ignore'),
+) }}
+```
+
+→ `dbt run --vars '{strict_mode: true}'` 일 때만 strict, 평소엔 느슨.
+
+### 끄면 일어나는 것
+
+| 항목 | strict (기본 권장) | loose (끄면) |
+|---|---|---|
+| schema.yml 빠뜨림 | dbt run fail | 조용히 무시. BQ 에 잘못된 schema 생성 가능 |
+| BQ schema drift | dbt run fail | default `ignore` — 종종 데이터 손실 |
+| dbt run 속도 | introspection 쿼리 1개 추가 (~수백 ms) | 더 빠름 (체크 안 함) |
+| 운영 사고 가능성 | 낮음 | 높음 (drift 가 silently 진행) |
+
+### 끌 때의 권장 시나리오
+
+- **개발 초기 / 프로토타이핑**: 빠른 iteration 우선. 운영 들어가면 다시 켜기
+- **read-only 모델**: source 가 신뢰 가능하고 schema 변경 영향 없을 때 (드물긴 함)
+- **emergency**: 사고 복구 중 임시로 끄고 처리 후 다시 켜기
+
+운영 권장은 **켜둔 채로**. introspection 쿼리는 `WHERE 1=0` 이라 데이터 스캔 0 bytes, 비용 거의 0. 그 대가로 silent drift 사고 막아주는 가치가 압도적.
+
+---
+
 ## 2-4. 스키마 변경이 BQ/Hive 에 반영되는 **타이밍**
 
 운영자가 가장 헷갈리는 부분. 시나리오: ETL 의 SQL 을 4 컬럼 → 5 컬럼으로 바꿨을 때 언제 실제 테이블에 적용되나.
