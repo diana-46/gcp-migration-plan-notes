@@ -67,7 +67,7 @@ BigQuery 는 강력한 분석 엔진이지만 **ad-hoc 임시 데이터 + fanout
 
 > **Dataproc Serverless for Spark** + **Interactive Session 모델** 이 정답 (현재 GKE long-lived Spark Connect 서버와 매핑).
 > 작업량: PoC 1.5~2주, 운영 단계 (GCP 전용 이미지) 포함 시 **2~3주**.
-> 비용은 별도 문서 → **[[3_Spark Connect on Dataproc Serverless 비용 계산]]**. 요약: 다운사이즈 + 24h 셋팅 월 **~$900~1,300** (사용량 데이터 기반).
+> 비용은 별도 문서 → **[[3_Spark Connect on Dataproc Serverless 비용 계산]]**. 요약: **GKE 직접 ~$964/월** (CUD 3년 시 ~$618), Dataproc Cluster ~$1,490, Serverless ~$5,443. **GKE 직접이 사내 패턴 + 최저 비용**.
 > **이미지 자체엔 사내 좌표 baked-in 없음** (prod 3.4.2 빌드 = `eclipse-temurin:17-jre` public base + ConfigMap 으로만 conf 주입). ConfigMap 만 GCP 용으로 새로 만들면 됨.
 > 단 이미지에 **사내 patched Hadoop (`khp-p7`)** 이 들어있어 PoC 에서 GCP 호환성 검증 필요. (`kent-dataplatform-jars` 는 표준 lib, Hudi 는 BQ 표준이라 무관)
 > **Spark catalog 백엔드 = `spark-bigquery-connector`** (Dataproc Serverless 기본 포함). Hive Metastore / Dataproc Metastore 불필요. BQ 이관과 Spark Connect 이관이 **독립적**.
@@ -123,9 +123,12 @@ BigQuery 는 강력한 분석 엔진이지만 **ad-hoc 임시 데이터 + fanout
 ### 핵심 요약 (2026-06-29 사용량 데이터 기반 갱신)
 
 - **운영 모델**: Interactive Session 만 가능 (Gate/Sync 평균 4~10초 < cold start 30~60초)
-- **24h 상주 사실상 필수** — 시간대별 호출 거의 균일 (peak/lowest = 1.87×), idle timeout 활용 의미 없음
-- **데이터 기반 추천 셋팅**: vCPU 16 (다운사이즈) + 24h + Dynamic Allocation (max 8) → 월 **~$900~1,300**
-- 현재 사이즈 (126 DCU) 그대로 24h: ~$5,443/월 (4~6배 과다, 75% 코호트가 10만 행 이하)
+- **24h 상주 사실상 필수** — 시간대별 호출 거의 균일 (peak/lowest = 1.87×), stage 간격 89% 가 10초 이내
+- **GKE 직접 운영 권장** — 사내 패턴 그대로 + 최저 비용
+- **비용 비교** (n2-custom 8c/20G × 9 기준):
+  - **GKE 직접 (zonal): ~$964/월 (SUD), ~$618 (CUD 3년)** ← 권장
+  - Dataproc Cluster: ~$1,490/월 (Dataproc fee +$526)
+  - Serverless: ~$5,443/월 (24h 상주 효과)
 
 데이터 근거 → [[11_사용량 분석 (한달 데이터 기반)]]
 

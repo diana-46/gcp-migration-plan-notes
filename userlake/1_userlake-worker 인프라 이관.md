@@ -15,7 +15,7 @@ created: 2026-06-26
 > **확정 방향**: Presto → **BigQuery**, RabbitMQ → **Pub/Sub**, HDFS → **GCS**. Hive 미사용으로 고려 대상 제외.
 > 큰 코드 작업 3축 — (1) 쿼리 엔진 SQL/JDBC 재작성, (2) `consumer/` 패키지 Pub/Sub 재설계, (3) `core/util/filerw` 의 GCS 구현.
 > **Spark Connect 는 Dataproc Serverless 로 lift 권장** — 제거하려면 sync/gate 재설계 수준이라 이관 범위 외로 두는 게 합리적.
-> **사용량 데이터 (2026-06-29)** → [[11_사용량 분석 (한달 데이터 기반)]] — 일 평균 코호트 230 / stage 1,500. 75% 가 10만 행 이하 (다운사이즈 가능). 시간대 균일 (24h 상주 필요).
+> **사용량 데이터 (2026-06-29)** → [[11_사용량 분석 (한달 데이터 기반)]] — 한달 6,924 cohort_run / 190 distinct cohorts × 평균 36회. **정기 스케줄 잡이 주류** → 시간대 균일 → 24h 상주 + 다운사이즈. 이용률 7.6%.
 
 ---
 
@@ -79,8 +79,9 @@ userlake-worker 는 Spark Connect 를 **3가지 용도**로 씀:
 
 | 옵션 | 설명 | 코드 변경 | 운영 |
 |---|---|---|---|
-| **A. Dataproc Serverless + Spark Connect** | URL만 교체. Spark 3.4.2 호환 이미지 확인 | 최소 | 매니지드 (세션 콜드스타트 / idle 비용 주의) |
-| B. Dataproc 일반 클러스터 | 클러스터 상주 | 최소 | 비용 균질 트래픽일 때 유리 |
+| **A. GKE 직접 (사내 패턴 그대로)** | StatefulSet manifest 그대로 GCP 로 | 중 (사내 K8s 익숙) | ✅ 사내 패턴 + 최저 비용 ($964/월) |
+| B. Dataproc Cluster (on GCE) | 매니지드 cluster + init action | 최소 | 매니지드 가치 vs +$526/월 |
+| C. Dataproc Serverless | URL 교체 | 최소 | 5배 비쌈 ($5,443/월) — 우리 워크로드 부적합 |
 | C. GKE + Spark Operator | GKE 일원화 | 최소 | Spark 직접 운영 — 권장 안 함 |
 | **D. Spark 완전 제거** | Gate→BQ SQL, Kafka write→Pub/Sub publish, split/send→네이티브 | **큼** | Spark 의존 완전 제거. BQ + Pub/Sub + GCS 일관 |
 
@@ -141,10 +142,21 @@ BQ 는 강력하지만 **ad-hoc 임시 데이터 + fanout pipeline 에 ceremony 
 
 요약:
 - 작업량 **1~2주** (이관 전체에서 가장 작음, critical path 아님)
-- 운영 모델은 **Interactive Session 만 가능** — Gate/Sync 평균 4~10초 < cold start 30~60초, batch 불가
-- 비용 (사용량 데이터 기반 [[11_사용량 분석 (한달 데이터 기반)]]): 다운사이즈 + 24h 셋팅 월 **~$900~1,300**
-- **24h 상주 사실상 필수** — 시간대별 호출 거의 균일 (peak/lowest = 1.87×), idle 절약 효과 없음
-- 75% 코호트가 10만 행 이하 → **현재 사이즈 (126 DCU) 4~6배 과다**, 다운사이즈 강력 권장
+- 운영 모델은 **Interactive Session 만 가능** — Gate/Sync 평균 4~10초 < cold start 30~60초
+- **24h 상주 사실상 필수** — 시간대별 균일, stage 간격 89% < 10초
+- **GKE 직접 운영 + 다운사이즈 (실측 기반)** — 사내 패턴 + 최저 비용
+
+**비용** (Spark UI 실측 기반 다운사이즈, [[11_사용량 분석 (한달 데이터 기반)]]):
+- ✅ **GKE 다운사이즈 (32 vCPU): $557/월 (SUD), $360 (CUD 3년)** ← 최종 권장
+- 현재 스펙 GKE (72 vCPU): $964/월 (SUD)
+- Dataproc Cluster 다운사이즈: $791/월 (Dataproc fee +$234)
+- Serverless (24h Premium): $5,398/월
+
+**다운사이즈 근거** (Spark UI 실측, uptime 409일):
+- CPU 이용률 ~2% (executor 8 × 각 0.26%, 409일 평균)
+- Memory 는 Peak 시 다 씀 → 유지 (10G)
+- Overhead 실사용 500MB (4G 대비 15배 오버) → **2G 로 축소**
+- Static allocation 8개 고정 → Dynamic Allocation max 4~6 으로 전환
 
 ---
 

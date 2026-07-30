@@ -1,260 +1,246 @@
 ---
-title: "Spark Connect on Dataproc Serverless 비용 계산"
+title: "Spark Connect 배포 모드 비교 — Serverless / Dataproc Cluster / GKE 직접"
 status: revised
 created: 2026-06-28
-revised: 2026-06-29
-대상: userlake-worker 가 사용하는 Spark Connect 의 Dataproc Serverless 이관 비용
-용도: 시나리오별 견적 / Pricing Calculator 입력값 / PoC 비용 전략
-부모: [[2_Spark Connect → Dataproc Serverless 검토]]
+revised: 2026-07-02
+대상: userlake-worker 의 Spark Connect 운영 모드 결정
+용도: 3축 비교 (개념 / 운영 / 마이그레이션) + 최종 추천
+부모: [[1_userlake-worker 인프라 이관]]
 ---
 
-# Spark Connect on Dataproc Serverless 비용 계산
+# Spark Connect 배포 모드 비교 — Serverless / Dataproc Cluster / GKE 직접
 
-> **2026-06-29 갱신**: 한달 사용량 데이터 ([[11_사용량 분석 (한달 데이터 기반)]]) 기반으로 가정 3개 폐기 후 재계산.
+> **결론**: **GKE 직접** 이 우리 케이스에 가장 부합 (비용 최우선 + 사내 K8s 패턴 재활용).
+> Cluster on GCE / Dataproc on GKE 는 매니지드 우선이면 대안 (연 \$1,536~\$4,152 추가).
+> Serverless 는 Interactive 강제 Premium 으로 3~4배 비쌈 → 부적합.
+
+> **관련 문서**:
+> - 상세 비용 계산 (Baseline vs Downsize): [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+> - 다운사이즈 Spark 설정: [[13_Spark Connect 다운사이즈 결정 (실측 기반)]]
+> - 단가 근거: [[12_Managed Service for Apache Spark 과금 체계 (공식)]]
+> - 사용량 근거: [[11_사용량 분석 (한달 데이터 기반)]]
+
+---
 
 ## 0. 결론
 
-> **PoC 추천 셋팅** (사용량 데이터 기반): Usage time **720h/월 (24h)**, Interactive **ON**, **다운사이즈** (Driver 4c + Executor 2~8 Dynamic Allocation), Memory per vCPU 2 GiB
-> **예상 견적**: 월 **~$900~1,300**
-> **시간대별 호출 거의 균일** → idle timeout 절약 효과 없음 → **24h 상주가 답**
-> **Gate/Sync 평균 4~10초 < cold start 30~60초** → **Batch 모드 절대 불가능**, Interactive Session 만
-> **75% 코호트가 10만 행 이하** → 현재 DCU 126 의 4~6배 과다, 다운사이즈가 진짜 답
+**GKE 직접 + 다운사이즈 (executor 3개 × 6 cores × 35G) = 최적** (Res CUD 3Y 기준 **\$917/월** = 현재 대비 -34%).
 
-### ⚠ 이전 추정 폐기 (2026-06-28)
+**핵심 인사이트 3가지**:
 
-| 항목 | 이전 (가정) | 데이터 기반 (현재) |
-|---|---|---|
-| Usage time | 240h/월 (8h × 30일) | **720h/월 (24h)** |
-| DCU | 126 (현재 사이즈 유지) | **21~63 (다운사이즈)** |
-| 월 비용 | $1,500~1,800 | **~$900~1,300** |
-| idle timeout 가설 | "절약 효과 60~90%" | "거의 없음" — 야간도 시간당 ~900 호출 |
+1. **GKE 와 GCE 의 underlying VM 가격 100% 동일** — 차이는 매니지드 fee
+2. **Dataproc Cluster fee 는 VM 사이즈에 비례** (32 vCPU 다운사이즈 시 \$234/월)
+3. **Serverless 는 Interactive session 강제 Premium** → 24/7 상시 워크로드에 부적합 (3~4배 비쌈)
 
 ---
 
-## 1. 가격 구조
+## 1. 3축 배포 모드 — 개념 비교
 
-- **DCU-시간** 단위 (DCU ≈ 0.6 vCPU + 4.5 GB 메모리)
-- **최소 자원 강제**: Driver 최소 4 DCU + Executor 최소 4 DCU × 2 = **잡당 최소 12 DCU**
-- 1분 최소 청구
-- 셔플 스토리지 별도
+### 1-1. Dataproc Serverless
 
-DCU 환산식: `max(vCPU / 0.6, memory_GB / 4.5)` — 둘 중 큰 쪽이 binding
+**모델**: GCP 가 관리하는 ephemeral 컴퓨트 위에 Spark 잡 실행
+
+**과금**: DCU × 시간 (Interactive session = **Premium tier 강제**)
+
+**장점**:
+- 인프라 관리 부담 0 (session 만 만들면 끝)
+- 사이즈 변경: properties 한 줄
+- Spark 업그레이드: runtime version 한 줄
+
+**단점**:
+- **비용 가장 비쌈** (Cluster 대비 ~3배, § 14 참고)
+- **VM CUD 약정 불가** (BQ CUD 는 회사 차원 결정 필요)
+- **Interactive 강제 Premium** (\$0.114181/h/DCU vs Standard \$0.076976/h)
+- **24/7 상시** 워크로드에는 idle timeout 효과 미미
+
+### 1-2. Dataproc Cluster (on GCE)
+
+**모델**: GCP 가 관리하는 always-on VM cluster + Spark Connect server (init action 등으로)
+
+**과금**: VM (SUD/CUD 적용) + **Dataproc management fee** ($0.010/vCPU/h) + PD
+
+**장점**:
+- 매니지드 도구 자동: Spark UI, History Server, autoscaler
+- 노드 fail 자동 복구
+- VM 패치 GCP 관리
+
+**단점**:
+- **Dataproc management fee** (vCPU 비례) — CUD 적용 안 됨
+- 사이즈 변경 시 cluster recreate 부담
+- 사내 K8s 패턴과 다름 (init action 으로 Spark Connect server 띄워야)
+- ⚠ **Master 와 Worker 동일 machine type 강제** (GCP Console UI 제약) — 다운사이즈 시 master 도 highmem 강제 → memory 낭비 & 추가 비용 (~$48/월 CUD 3Y)
+- ⚠ 다운사이즈 (executor 3개) 시 총 32 vCPU → Dataproc fee \$234/월 (32 × \$7.30)
+
+### 1-3. GKE 직접 운영
+
+**모델**: 사용자 GKE cluster + Spark Connect StatefulSet 직접 배포 (**사내 현재 패턴 그대로**)
+
+**과금**: VM (SUD/CUD) + GKE fee (zonal 1 무료) + PD — **Dataproc fee 없음**
+
+**장점**:
+- **비용 가장 저렴** — Dataproc fee 없음
+- **사내 패턴 그대로** — `dp-gitops/athlon/spark-connect/` StatefulSet 그대로 이전
+- **사내 이미지 재활용** — `spark-k8s-build` 사내 fork
+- **Node pool 별 다른 machine type 가능** ⭐ — Master 는 std-16 (driver 여유), Worker 는 highmem-8 로 최적 배치
+- Spot pool 활용 시 추가 절감 가능
+
+**단점**:
+- Spark Connect server 직접 운영 (Spark 특화 매니지드 도구 없음)
+- Spark UI / History Server 직접 셋업 (K8s ingress or 별도 배포)
+- Spark JMX 메트릭 export 직접 설정 (Prometheus + JMX exporter)
+- Autoscaling 직접 설정 (HPA + Cluster Autoscaler)
+- GCP "권장 패턴" 이 아님 (공식 가이드 외)
+
+> Cloud Logging / 기본 Cloud Monitoring (pod/node) 는 GKE 도 **자동 제공**. 진짜 차이는 Spark 특화 도구.
 
 ---
 
-## 2. Dataproc Serverless 운영 모델 — **Interactive Session 만 가능, 24h 상주 필수**
+## 2. Underlying 자원 비교 — VM 가격은 모두 동일
 
-userlake-worker 는 `SparkSession.builder().remote(sc://...)` 로 외부 서버에 붙음 → **Interactive Session 모델** 과 정확히 매핑.
+```
+어떤 모드를 골라도 같은 GCE VM 이 underlying:
+                    │
+        ┌───────────┼────────────┐
+        ↓           ↓            ↓
+      GKE 위    Dataproc 위    Serverless
+        │           │            │
+   +GKE fee    +Dataproc fee    +DCU 비용 (Premium 강제)
+   (zonal 무료) ($0.010/vCPU/h)  (VM CUD 적용 불가)
+```
 
-| 모드 | 동작 | userlake-worker 적합도 |
-|---|---|---|
-| Batch | 잡 submit 마다 ephemeral 컴퓨트 | ❌ **불가능** — cold start (30~60초) > Gate/Sync 평균 실행시간 (4~10초). [[11_사용량 분석 (한달 데이터 기반)]] § 3 |
-| **Interactive Session** | 세션 한 번 띄워두고 (Spark Connect 서버) 클라이언트가 붙음 | ✅ **유일한 옵션** |
+→ GKE vs Cluster on GCE **VM 가격 100% 동일**. 차이는 **Dataproc fee** 만.
+→ Serverless 는 완전 다른 과금 (DCU) → 우리 워크로드에서 훨씬 비쌈.
 
-### ⚠ 24h 상주가 사실상 필수 — 데이터 기반 결론
-
-이전에 "업무 시간 집중, idle timeout 활용" 으로 추정했지만 **실제 데이터가 폐기**.
-
-[[11_사용량 분석 (한달 데이터 기반)]] § 1 의 시간대별 분포:
-
-| 시간대 (UTC / KST) | GATE+SYNC | 시사점 |
-|---|---|---|
-| 07 / 16 (퇴근시간) | 1,837 | peak |
-| 15 / 00 (자정 배치) | 1,804 | peak |
-| 14 / 23 | 980 | lowest |
-| 03 / 12 ~ 23 / 08 | ~900~1,500 | 새벽도 시간당 900+ |
-
-- peak/lowest 비율 = **1.87× (2배 미만)**
-- 자정 (KST 00시) 도 peak (배치 스케줄 추정)
-- 새벽 04~06 시 (KST 13~15시) 도 시간당 1,300+ 호출
-
-→ **idle timeout 으로 야간 절약 효과 거의 없음**
-→ **24h 상주 (월 720h) 가 사실상 답**
-
-### Cold Start 보면 Batch 모드 완전히 불가능
-
-| Stage | 평균 실행 시간 | 비고 |
-|---|---|---|
-| GATE | **4.3초** | < cold start 30~60초 |
-| SYNC | **9.8초** | < cold start |
-| TARGET | 71초 | cold start 흡수 가능하지만 Spark 안 씀 |
-
-→ Gate/Sync 가 cold start 보다 짧음 → batch 면 stage 실행보다 cold start 가 더 오래 걸림. **무의미**.
-
-→ Interactive Session 만 가능. **24h 상주 가정으로 비용 견적**.
+**상세 시나리오 비용**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 8
 
 ---
 
-## 3. 실제 사이즈 vs 권장 다운사이즈
+## 3. 운영 측면 비교
 
-### 3-1. 현재 사이즈 (dp-gitops spark-defaults.conf)
-
-| 컴포넌트 | 사이즈 | DCU |
-|---|---|---|
-| Driver | 8 vCPU / 14 GB | ~14 |
-| Executor × 8 | 8 vCPU / 14 GB 각 | ~112 |
-| **합계** | | **126** |
-
-### 3-2. 데이터 기반 권장 다운사이즈
-
-[[11_사용량 분석 (한달 데이터 기반)]] § 4 의 코호트 사이즈 분포:
-
-| 사이즈 | TARGET 비율 | GATE 비율 | SYNC 비율 |
+| 측면 | Serverless | Dataproc Cluster | **GKE 직접** |
 |---|---|---|---|
-| < 10k | 35% | 29% | **69%** |
-| 10k ~ 100k | 40% | 47% | 23% |
-| 100k ~ 1M | 16% | 19% | 6% |
-| 1M ~ 10M | 7% | 4% | 2% |
-| ≥ 10M | **1%** | 0.6% | 0.4% |
+| 초기 셋업 부담 | 최저 | 중 (cluster + init action) | 중 (StatefulSet manifest) |
+| 운영 자동화 | 최상 | 상 | 중 |
+| **사내 패턴 일치** | 낮음 | 중 | **✅ 최상** |
+| Spark Connect server 운영 | 자동 (session API) | init action | **사내 StatefulSet 그대로** |
+| 이미지 관리 | Dataproc runtime | Dataproc runtime | **사내 `spark-k8s-build` fork** |
+| Spark 업그레이드 | runtime version 1줄 | cluster recreate | 이미지 빌드 + rolling update |
+| 사이즈 변경 | properties 1줄 | cluster recreate | StatefulSet patch |
+| Spark UI / History | 자동 | 자동 | 직접 셋업 (or GCP Spark History Server 별도) |
+| 노드 fail 복구 | 자동 | 자동 (Dataproc) | K8s 자동 (StatefulSet) |
+| Autoscaling | 자동 (DCU) | Dataproc autoscaler | HPA + Cluster Autoscaler 직접 |
+| Cloud Logging (container 로그) | 자동 | 자동 | 자동 (GKE 기본) |
+| Cloud Monitoring (기본 pod/node) | 자동 | 자동 | 자동 (GKE 기본) |
+| Cloud Monitoring (Spark JMX 메트릭) | 자동 | 자동 | 직접 셋업 (Prometheus + JMX exporter) |
+| GCP 권장도 | 매니지드 표준 | Spark 워크로드 표준 | 일반 K8s 패턴 |
 
-→ **75% 가 10만 행 이하**, **1% 만 10M 행 초과**.
-→ 현재 사이즈는 1% 거대 잡 위한 over-provisioning.
-
-### 3-3. 권장 사이즈 (다운사이즈)
-
-| 컴포넌트 | 사이즈 | DCU |
-|---|---|---|
-| Driver | 4 vCPU / 8 GB | ~7 |
-| Executor min | 2 × (4 vCPU / 8 GB) | ~14 |
-| Executor max (Dynamic) | 8 × (4 vCPU / 8 GB) | ~56 |
-| **base (min)** | | **~21 DCU** |
-| **peak (max)** | | **~63 DCU** |
-| **평균 (burst 가중)** | | **~25~30 DCU** |
-
-> 75% 잡 (10만 이하) 는 base 21 DCU 로 처리. 1% 거대 잡 + burst 시 Dynamic Allocation 으로 확장.
-> Burst 일 (Q7 의 6/8~6/13 같은 5,500 stage/일) 도 max 8 executor 로 충분 검증 필요.
+**핵심**: 사내가 **이미 GKE 에서 spark-connect 운영 중** — 새 패턴 학습 부담 없음.
 
 ---
 
-## 4. 비용 시나리오 — 데이터 기반 재계산
+## 4. 마이그레이션 작업량 비교
 
-### 4-1. 운영 모델별 ($0.06/DCU-시간, 서울 리전 추정)
-
-| 시나리오 | 사이즈 | DCU-시간/월 | **월 비용** |
+| 작업 | Serverless | Dataproc Cluster | **GKE 직접** |
 |---|---|---|---|
-| ❌ 현재 사이즈 24h | 126 | 90,720 | **~$5,443/월** (과다) |
-| ❌ 현재 사이즈 8h | 126 | 30,240 | ~$1,815/월 (실제론 8h 불가능, 데이터로 폐기) |
-| ✅ **다운사이즈 + 24h + Dynamic (avg 25 DCU)** | 25 | 18,000 | **~$1,080/월** ← 추천 |
-| ✅ 다운사이즈 + 24h + 보수 (avg 21 DCU) | 21 | 15,120 | **~$907/월** |
-| ⚠ 최대 다운사이즈 (12 DCU) | 12 | 8,640 | ~$518/월 (burst 위험) |
+| GKE/Cluster 인프라 프로비저닝 | 0 (session API) | Dataproc cluster 생성 | GKE cluster (사내 패턴) |
+| Spark Connect server 구성 | 0 | init action 작성 | **사내 manifest 그대로** ✅ |
+| 이미지 빌드 | Dataproc runtime | Dataproc runtime | **사내 fork** ([[2_Spark Connect → Dataproc Serverless 검토]] § 4-3) |
+| ConfigMap (hadoop/spark-defaults) | properties 직접 | ConfigMap | **사내 ConfigMap 그대로** ✅ |
+| 인증 (Workload Identity) | 자동 | 설정 필요 | 설정 필요 ([[7_Kerberos 제거 (인증 흐름 재설계)]]) |
+| GCS 연동 | 자동 | 자동 | gcs-connector jar 추가 |
+| BigQuery connector | 자동 | 자동 | jar 추가 |
+| Cloud Logging / 기본 Monitoring | 자동 | 자동 | 자동 (GKE 기본) |
+| Spark JMX 메트릭 export | 자동 | 자동 | 직접 셋업 (Prometheus + JMX exporter) |
+| **전체 작업량** | 0.5~1주 | 1~2주 | **1~2주** (단 사내 패턴 활용) |
 
-### 4-2. 데이터 기반 추천 시나리오
+→ GKE 직접 = Cluster 와 작업량 유사. **단 사내 yaml / 이미지 그대로 활용 가능** → 새 학습 부담 낮음.
 
-| 항목 | 값 | 근거 |
+---
+
+## 5. 위험 / 고려 사항
+
+### 5-1. GKE 직접의 잠재 리스크
+
+| 리스크 | 영향 | 완화 |
 |---|---|---|
-| Usage time | **720h/월 (24h × 30일)** | Q1 시간대 균일, Q2 주말도 56% 호출 |
-| DCU base | **~21** (Driver 7 + Executor min 14) | Q4 의 75% 잡이 10만 행 이하 |
-| DCU peak (Dynamic) | ~63 (max 8 executor) | Q4 의 1% 거대 잡 + Q7 의 burst |
-| **평균 DCU** | **~25** | 보수 가중 (10% peak 시간 가정) |
-| **월 비용** | **~$1,080** | 25 × 720 × $0.06 |
-| 변동폭 | **$900 ~ $1,300** | DCU 21~30 사이
+| Spark Connect 직접 운영 부담 | 중 | 사내 패턴 그대로 → 부담 작음 |
+| Spark UI / History 자동 안 됨 | 중 | GCP Spark History Server 별도 배포 또는 Spark UI ingress 노출 |
+| 사내 이미지 GCP 호환 | 중 | [[2_Spark Connect → Dataproc Serverless 검토]] § 4-3 참고 |
+| GCP 권장 패턴이 아님 | 낮음 | 표준 K8s 패턴이라 문제 없음 |
+| Spot 사용 시 회수 | 중 | Spark fault tolerance + task retry |
+
+### 5-2. Dataproc Cluster 의 잠재 리스크
+
+| 리스크 | 영향 |
+|---|---|
+| init action 으로 Spark Connect server — 사내 패턴과 다름 | 중 |
+| Dataproc fee 가 vCPU 비례 → CUD 적용 안 됨 | 중 |
+| Cluster recreate 시 다운타임 | 중 |
+
+### 5-3. Serverless 의 잠재 리스크
+
+| 리스크 | 영향 |
+|---|---|
+| Interactive session 강제 Premium ($0.114181/h) | 큼 (비용 3배) |
+| VM CUD 적용 불가 (BQ CUD 는 회사 차원) | 큼 |
+| 우리 워크로드 (24h 상주 필수) 에 부적합 | 큼 |
 
 ---
 
-## 5. Cloud Pricing Calculator 입력값 — 데이터 기반 갱신
+## 6. 최종 추천
 
-[Cloud Pricing Calculator](https://cloud.google.com/products/calculator) → Dataproc Serverless 항목.
+### 6-1. 우리 케이스에 가장 부합
 
-### 5-1. 추천 셋팅 (데이터 기반)
-
-| 항목 | 값 | 근거 |
+| 평가 기준 | 우리 케이스 | 적합 옵션 |
 |---|---|---|
-| **Usage time** | **720h/월** (24h × 30일) | Q1 시간대 균일, Q2 주말도 호출 |
-| **Interactive** | **ON** 필수 | Q3 평균 4~10초 < cold start 30~60초, batch 모드 불가 |
-| **Number of vCPU** | **16** (Driver 4 + Executor 3 × 4) | Q4 의 75% 가 10만 행 이하, 다운사이즈 가능 |
-| **Memory per vCPU** | **2 GiB** | 16GB / 8 vCPU 비율 |
-| **Shuffle Storage per vCPU** | **100 GiB** | Dataproc Serverless 기본값 |
-| **Current cluster utilization** | **70%** | Q1 분포 평균 (peak/avg = 1.5x 정도) |
+| 사내가 이미 K8s + Spark Connect 운영 중 | ✅ | **GKE 직접** |
+| 24h 상주 필수 (정기 스케줄) | ✅ | GKE / Cluster (Serverless ❌) |
+| 변경 빈도 낮음 (Spark 설정 stable) | ✅ | GKE / Cluster |
+| 비용 민감 | ✅ | **GKE 직접** |
+| GCP 매니지드 가치 큼? | △ | Cluster (하지만 fee 부담) |
 
-→ **예상 견적: 월 ~$900~1,300**
+→ **GKE 직접 운영 + 다운사이즈 + Res CUD 3Y 권장** ($561/월)
 
-### 5-2. 비교: 시나리오별 입력값
+### 6-2. Cluster vs GKE 결정 기준
 
-| 시나리오 | Usage | vCPU | Mem/vCPU | 월 비용 |
-|---|---|---|---|---|
-| ❌ 현재 사이즈 24h | 720h | **72** | 1.75 | ~$5,443 |
-| ❌ 이전 추정 (8h 가정) | 240h | 72 | 1.75 | ~$1,800 |
-| ✅ **데이터 기반 추천** | **720h** | **16** | **2** | **~$1,080** |
-| ⚠ 최소 다운사이즈 | 720h | 8 (Driver 4 + Exec 1×4) | 2 | ~$518 |
-| ✅ 보수 (큰 코호트 대비) | 720h | 24 (Driver 4 + Exec 5×4) | 2 | ~$1,512 |
+**GKE 직접 우선**:
+- 사내 K8s 패턴 재활용 가능 (매뉴얼 운영에 익숙)
+- 최저 비용 (연 \$1,536 절감 vs Dataproc on GCE, \$4,152 절감 vs Dataproc on GKE — CUD 3Y 기준)
+- **Node pool 별 다른 machine type 가능** (Master std-16, Worker hm-8) — K8s 스케줄 안전 + driver 여유
+- 사내 이미지 / manifest 그대로 활용
 
-> Dynamic Allocation max=8 면 burst 시 더 늘어남. peak 가 짧으면 평균 25 DCU 정도.
+**Cluster on GCE 선택 근거** (있다면):
+- 매니지드 Spark UI / History Server 원함
+- Dataproc autoscaler 로 노드 자동 확장 필요
+- init action 으로 spark-connect 서버 셋업 부담 감수
+- ⚠ Master/Worker 동일 spec 강제 — Master 도 hm-8 되어 memory 낭비
 
----
+→ **팀 결정 필요**: 비용 절감 (연 \$1,536~\$4,152) vs 매니지드 도구 자동 제공 tradeoff. 상세 결정 매트릭스: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)#10 배포 모드 결정 매트릭스]]
 
-## 6. ~~사이즈 다운 시뮬레이션~~ → 추천 (§5-1 로 통합)
+**Serverless 는 왜 부적합**:
+- Interactive session 강제 Premium → 24/7 상시 워크로드에서 \$2,040~\$6,938/월 (다운사이즈~현재)
+- 같은 스펙 Cluster/GKE 대비 3배 이상
+- 상세 계산: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 7
 
-이전 문서에서 "다운사이즈는 옵션" 으로 다뤘는데, 데이터 분석 결과 **다운사이즈가 기본 권장**으로 바뀜.
+### 6-3. Phase 별 실행
 
-§5-1 의 추천 셋팅이 곧 다운사이즈 셋팅임.
-
-### 백업: 현재 사이즈 유지 시 (참고용)
-
-| 항목 | 값 | 비용 |
+| Phase | 배포 | 활동 |
 |---|---|---|
-| 현재 사이즈 + 24h | 72 vCPU / 1.75 GiB | ~$5,443/월 |
+| **Phase 1** (사내 PoC) | 사내 GKE | 다운사이즈 스펙 검증 ([[13_Spark Connect 다운사이즈 결정 (실측 기반)]] § 6) |
+| **Phase 2** (GCP 이관) | GKE 직접 | StatefulSet 배포 → 1주 안정 확인 → Default 요금 (\$2,027) |
+| **Phase 2+1주** | 동일 | Res CUD 3Y 약정 → 월 **\$917** 확정 |
+| **Phase 3** (선택) | 동일 | Spot pool → 월 ~\$776 / Driver 증설 검토 |
 
-→ 권장 안 함. 75% 잡이 10만 행 이하인데 over-provisioning.
-
----
-
-## 7. PoC 비용 전략 (2 phase)
-
-**Phase 1 (검증)**: 다운사이즈 시작 + Dynamic Allocation
-- 셋팅: Driver 4c/8G, Executor min 2 / max 8 × (4c/8G), Dynamic Allocation **ON**
-- 예상 비용: **월 ~$900~1,300**
-- 측정: Spark UI 로 active executor / utilization / OOM 발생 여부
-- 검증 대상: 1% 의 10M+ 거대 코호트가 max 8 executor 로 처리되는지
-
-**Phase 2 (최적화)**:
-- Phase 1 데이터 보고:
-  - executor max 8 이 충분하면 → 유지
-  - 부족하면 → Driver 사이즈 또는 max executor 증가
-  - over-provisioning 이면 → min/max 더 줄임
-- 목표: **월 ~$700~1,100**
-
-**중지 (Stop) 조건**: Phase 1 에서 OOM / job 실패율 > 1% / SLA 위반 → 단계적 사이즈 증가
+**비용 상세**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 9
 
 ---
 
-## 8. 비용 정확도 향상에 필요한 데이터
+## 7. 참고
 
-### ✅ 확인된 데이터 (2026-06-29)
-
-[[11_사용량 분석 (한달 데이터 기반)]] 로 확인된 것:
-
-1. ✅ **시간대별 호출 분포** — 거의 균일, 24h 상주 필요
-2. ✅ **Stage 평균 실행 시간** — Gate 4초, Sync 10초, Target 71초
-3. ✅ **코호트 사이즈 분포** — 75% 가 10만 이하, 1% 가 10M 이상
-4. ✅ **재시도 / 실패 빈도** — FAILED 0.05%, max attempt 5
-5. ✅ **일평균 / burst 트래픽** — 일 1,500 stage 평소, burst 5,500 stage
-
-### ⚠ 아직 미확인
-
-1. **`spark.dynamicAllocation.enabled` 여부** — 사내 `spark-defaults.conf` 에 있는지 (executor 8개가 고정인지 max 인지)
-2. **현재 GKE spark-connect StatefulSet 의 평균 utilization** — CPU / 메모리 / 디스크. 다운사이즈 검증
-3. **Shuffle 디스크 사이즈** — StatefulSet 의 `volumeMounts` 에 PV 또는 emptyDir 사이즈
-4. **STOPPED 8~10% 의 정체** — timeout 인지 사용자 cancel 인지 ([[11_사용량 분석 (한달 데이터 기반)]] § 6)
-5. **Burst 시간대 분포** — 5,500 stage/일 이 24h 균일인지, 특정 시간대 집중인지
-
-→ 위 5가지 확인되면 **±5% 정확도** 견적 가능. 현재 ±15~20% 수준.
-
----
-
-## 9. 다음 액션
-
-1. ✅ 사용량 데이터 수집 완료 → [[11_사용량 분석 (한달 데이터 기반)]]
-2. § 5-1 추천 셋팅으로 Pricing Calculator 견적 1차 확인 (Usage 720h, vCPU 16, Mem/vCPU 2)
-3. § 8 의 미확인 데이터 5개 추가 확인 (특히 dynamic allocation 여부 + 현재 utilization)
-4. PoC Phase 1: 다운사이즈 (DCU 21 base) + Dynamic Allocation (max 8) 으로 1~2주 운영
-5. Spark UI / 청구서로 검증 → Phase 2 최적화 (월 ~$700~1,100 목표)
-
----
-
-## 10. 참고
-
-- **데이터 근거**: [[11_사용량 분석 (한달 데이터 기반)]] (이 문서의 거의 모든 결론이 여기서 나옴)
-- 상위 문서: [[2_Spark Connect → Dataproc Serverless 검토]] § 3
-- 상위의 상위: [[1_userlake-worker 인프라 이관]] § 2-2-1
-- 코드 위치: `userlake-worker/src/main/kotlin/com/kakaopage/athlon/stage/sparkconnect/`
-- 인프라: `dp-gitops/athlon/spark-connect/`
+- **비용 계산 상세**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+- **다운사이즈 Spark 설정**: [[13_Spark Connect 다운사이즈 결정 (실측 기반)]]
+- **단가 근거**: [[12_Managed Service for Apache Spark 과금 체계 (공식)]]
+- **사용량 근거**: [[11_사용량 분석 (한달 데이터 기반)]]
+- **Spark Connect 이관** (이미지, 카탈로그 등): [[2_Spark Connect → Dataproc Serverless 검토]]
+- 사내 인프라: `dp-gitops/athlon/spark-connect/`
+- 사내 빌드: `spark-k8s-build` (spark-connect-khp-3.4.2-hadoop2.10.2 branch)
