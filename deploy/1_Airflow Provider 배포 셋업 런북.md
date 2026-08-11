@@ -3,7 +3,8 @@
 **대상**: `kakaoent/dp-airflow-provider`
 **목적**: 워크플로우 커밋 전에 완료해야 하는 GCP · GitHub 설정 절차
 **설계 배경**: [[0_Airflow Provider 배포 파이프라인 설계]]
-**상태**: dev 경로 검증 완료. main 파이프라인 실측만 남음 (§4 체크리스트)
+**용어 주의**: 이 파이프라인은 registry 업로드까지다. 실제 배포는 소비 팀의 Composer 반영 시점 (설계 노트 §0.1)
+**상태**: rc·main 전 경로 검증 완료
 
 ---
 
@@ -246,7 +247,10 @@ gh api repos/kakaoent/berrizdata-airflow-dags/branches/main/protection  # 404
 
 ---
 
-# Part II-A. IAM 대기 중 우회 경로 (비상용)
+# Part II-A. 수동 업로드 (비상용)
+
+> IAM 바인딩이 2026-08-05 에 완료되어 이 경로는 더 이상 필요하지 않다.
+> 파이프라인이 막힐 때의 비상 절차로 남겨둔다.
 
 ## A.1 무엇이 막히고 무엇이 안 막히나
 
@@ -334,6 +338,108 @@ python -m twine upload \
 ## B.3 관측된 기존 설정
 
 `prod-dp-python-registry` 에 `cleanupPolicyDryRun: true` 가 이미 설정돼 있었다(정책은 없음). 정책이 없으므로 현재 동작에 영향이 없고, 향후 prod 에 정책을 걸면 dry-run 으로 시작된다 — 안전한 기본값이라 그대로 두었다.
+
+---
+
+# Part II-C. 파이프라인 검증 결과
+
+## C.1 rc 경로 (2026-08-05, `rc/v0.2.0` push)
+
+| 단계 | 결과 | 확인된 것 |
+|---|---|---|
+| `unit-test / test` | ✅ | ruff + pytest 가 CI 에서 동작 |
+| `prepare-meta` | ✅ | `__init__.py` 에서 base 버전 추출 |
+| ↳ KST 타임스탬프 | ✅ | `github.run_started_at` + 9h |
+| ↳ PEP 440 검증 | ✅ | prerelease 로 인식 |
+| `Override version` | ✅ | `sed` 로 `__version__` 줄만 치환 (주석 보존) |
+| `Build wheel` | ✅ | wheel 파일명에 버전 반영 |
+| WIF 인증 | ✅ | 바인딩 추가 후 통과 |
+| dev GAR 업로드 | ✅ | |
+| dev Composer 설치 | ✅ | `===0.2.0.dev20260805173355` pin 하여 확인 |
+| `notify-slack` | ✅ | |
+| PR 체크 이름 | ✅ | `unit-test / test`, `build-check` |
+| PR 에서 `rc/` 스킵 제거 | ✅ | rc→main PR 에서도 체크 실행됨 |
+
+## C.2 main 경로 (2026-08-05, PR #1 머지)
+
+| Job | 결과 | 확인된 것 |
+|---|---|---|
+| `check-version` | ✅ 6s | `event.before` 비교가 실제 머지 커밋에서 동작 |
+| `unit-test / test` | ✅ 1m53s | |
+| `upload-dev / upload` | ✅ 55s | `0.2.0` → dev GAR (18:42:31) |
+| `upload-prod / upload` | ✅ 54s | `0.2.0` → prod GAR (18:43:36) — **prod 경로 첫 성공** |
+| `create-release` | ✅ 7s | `v0.2.0` 태그 + Release. `contents: write` 충분 |
+| `notify-slack` | ✅ 5s | |
+
+**dev·prod 모두 접미사 없는 `0.2.0`** 이 올라갔다 (`...-0.2.0-py3-none-any.whl`).
+main 경로는 `version-override` 를 넘기지 않으므로 `__init__.py` 값을 그대로 쓴다.
+
+> dev registry 에 타임스탬프 버전이 함께 보이는 것은 rc push 가 같은 registry 를 쓰기 때문이며
+> main 머지와 무관하다. Slack 알림도 rc push / main 머지가 각각 별도로 발송된다.
+> 알림 구분은 환경·브랜치 표기로 한다. main 머지는 dev·prod 양쪽에 올리므로
+> `( dev, prod | Branch main )` 로 함께 표기한다 (2026-08-06 정정 — 이전에는 `prod` 만 적혀
+> "dev 는 안 올라갔나" 하는 오해를 불렀다). rc push 는 `( dev | Branch rc/... )`.
+
+## C.3 미실측 경로
+
+**버전 미변경 main 머지 → skip.** PR 단계에서 `version-diff` 가 먼저 막으므로 정상 경로로는
+도달하지 않는다. 체크를 무시하고 머지하거나 main 에 직접 push 한 경우의 안전망이며,
+그런 일이 생기면 자연히 검증된다. 409 실패가 아니라 skip 으로 끝나야 정상이다.
+
+## C.3.1 버전 하락 방지 검사 (2026-08-06 추가, 로컬 검증)
+
+CI 에서는 아직 하락 케이스가 발생하지 않았으므로, 실제 git 저장소를 만들어
+워크플로우에서 스크립트를 추출해 bash 로 직접 실행 검증했다.
+
+`version-diff` (`trigger.on-pr.yml`) — base 대비:
+
+| base | head | exit | 결과 |
+|---|---|---|---|
+| `0.2.0` | `0.2.0` | **1** | ❌ 버전 미변경 차단 |
+| `0.2.0` | `0.3.0` | 0 | 🚀 배포 예정 안내 |
+| `0.3.0` | `0.2.0` | **1** | ❌ 하락 차단 |
+| `0.9.0` | `0.10.0` | 0 | 통과 (문자열 비교였다면 차단됐을 케이스) |
+
+PR #3 에서 실제로 확인했다 — 버전 `0.2.0` 그대로 push 하니 `version-diff` 가 실패하고
+`unit-test`·`build-check` 가 취소됐다. `0.2.1` 로 올리자 셋 다 통과했다.
+
+`tests/test_version.py` — `v0.2.0` 태그 기준:
+
+| `__version__` | 결과 |
+|---|---|
+| `0.2.0` / `0.2.1` / `0.3.0` | 통과 |
+| `0.1.9` / `0.1.0` | 차단 |
+
+CI 에서 `test_version_not_lower_than_latest_release` 가 `PASSED` 로 실행되는 것도 확인했다
+(skip 이 아님 → `fetch-depth: 0` 이 태그를 정상 수급).
+
+> 검증 과정에서 하네스 자체의 버그를 두 번 겪었다. 참고:
+> - `sed "s|BASE_SHA|$SHA|"` 가 변수 선언 `BASE_SHA="..."` 의 변수명까지 치환 → 고유 플레이스홀더(`@@BASESHA@@`) 사용
+> - zsh 에서 `"$SHA:path"` 가 파라미터 modifier 로 해석되어 경로가 깨짐 → Actions 는 bash 이므로 검증도 bash 로 실행
+>
+> 워크플로우 스크립트 자체의 문제가 아니었다. 셸 차이로 재현 결과가 달라질 수 있다는 점만 기억할 것.
+
+## C.4 검증 과정에서 발견한 것
+
+**① 린터 버전 미고정으로 CI 가 스스로 깨짐**
+로컬 `ruff 0.15.20`, CI `0.16.1`. 0.16 에서 기본 규칙 집합이 넓어져 코드를 건드리지 않았는데 25건이 지적됐다.
+→ `ruff==0.16.1` 로 정확히 고정하고 `[tool.ruff.lint] select` 를 명시 선언 (`E4, E7, E9, F, I`).
+
+**② local label 은 GAR 은 수락, Composer 는 거부**
+[[0_Airflow Provider 배포 파이프라인 설계]] §2.3.1.
+→ 생산 측만 검증하면 부족하고 소비 측까지 확인해야 한다.
+
+**③ 버전 하락이 통과됨**
+첫 릴리즈에서 `0.3.0 -> 0.2.0` 이 통과했다 (main 초기 스켈레톤 값이 `0.3.0`, 실제 배포 최신은 `0.1.0` 이라 의도된 조정). 하지만 "값이 달라졌는가" 만 보는 로직이라 실수로 낮춰도 통과한다.
+→ `check-version` 에 PEP 440 순서 비교 추가 (설계 §3.6).
+
+**④ Slack 알림의 환경 표기가 실제와 달랐음**
+main 머지는 dev·prod 양쪽에 올리는데 알림에는 `prod` 만 적혀 있었다.
+→ `env-name: 'dev, prod'` 로 정정.
+
+**⑤ heredoc 실패가 job 실패로 이어지지 않음**
+`python3 - <<'PY'` 가 실패해도 스크립트가 계속 진행돼 exit 0 이 됐다.
+→ `|| exit 1` 명시. 셸 `-e` 옵션에 의존하지 않는다.
 
 ---
 
