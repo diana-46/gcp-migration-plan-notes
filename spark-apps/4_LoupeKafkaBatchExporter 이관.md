@@ -183,5 +183,5 @@ protected def loadFromBigQuery(sql: String, materializationDataset: String, spar
 
 - [[3_spark-apps 런타임 버전 결정]] — Spark/Java/Scala/이미지 결정과 근거
 - [[2_Composer에서 GKE Spark Operator 제출]] — 제출 경로·오퍼레이터 구조
-- [[사용중인_spark_job]] — 이관 대상 앱 인벤토리
+- [[1_사용중인_spark_job]] — 이관 대상 앱 인벤토리
 - 코드: `spark-apps` 브랜치 `feature/DP-3156` (BigQuery 소스 변경분은 미커밋)

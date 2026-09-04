@@ -1,5 +1,5 @@
 ---
-title: "neptune — 이관 대상 DAG Operator 인벤토리"
+title: "이관 대상 DAG Operator 인벤토리 (neptune)"
 status: draft
 tags:
   - neptune

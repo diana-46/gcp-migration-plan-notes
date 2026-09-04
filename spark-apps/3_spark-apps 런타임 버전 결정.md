@@ -141,4 +141,4 @@ f72ecb2  DP-3156 Spark 3.5.8 로 상향하고 BigQuery 커넥터 추가
 
 - [[4_LoupeKafkaBatchExporter 이관]] — 앱별 구현 (Hive → BigQuery)
 - [[2_Composer에서 GKE Spark Operator 제출]] — 제출 경로·오퍼레이터 구조
-- [[사용중인_spark_job]] — 이관 대상 앱 인벤토리
+- [[1_사용중인_spark_job]] — 이관 대상 앱 인벤토리

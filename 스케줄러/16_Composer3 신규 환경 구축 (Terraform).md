@@ -1,3 +1,11 @@
+---
+title: "Composer 3 신규 환경 구축 가이드 (Terraform)"
+tags: [composer, terraform, 런북]
+status: final
+created: 2026-07-30
+updated: 2026-07-30
+---
+
 # Cloud Composer 3 (Airflow 3) 신규 서비스 구축 가이드
 
 최종 수정: 2026-07-30

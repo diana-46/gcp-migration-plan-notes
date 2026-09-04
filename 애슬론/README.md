@@ -4,6 +4,7 @@
 > ETL→dbt, Presto→BigQuery 전환은 이미 **확정**된 전제. 그 위에서 athlon이라는 플랫폼이 어떻게 바뀌어야 하나를 다룬다.
 >
 > 결론 노트는 [[1_개요]].
+> 편입 노트 (2026-08-20, 구 `neptune/`·`memo/` 폴더에서 병합): [[9_이관대상 Operator 인벤토리]] · [[10_athlonQuerySensor 관련]]
 
 ---
 

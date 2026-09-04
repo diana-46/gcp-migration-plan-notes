@@ -21,21 +21,40 @@
 
 1. GCP의 **서울 리전**을 기준으로 조사한다.
 
-## 이 레포의 조사 범위
+## 이 레포의 역할
 
-이 레포에서는 위 항목 중 다음 두 영역을 조사한다:
-
-| 영역       | 폴더                   | 다루는 내용                                                                                                                                                                             |
-| -------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **스케줄러** | [[스케줄러/1_개요\|스케줄러/]] | • Airflow 운영 방식 (Composer vs Self-managed)<br>• Airflow에서 dbt를 어떻게 돌릴지 (KubernetesPodOperator, dbt-airflow 패턴 등)                                                                   |
-| **애슬론**  | [[애슬론/1_개요\|애슬론/]] | ETL→dbt, Presto→BigQuery 전환 결정 위에서 **"athlon 플랫폼은 어떻게 재구현될 것인가"**<br>5축 통합 관리: UI / 실행 그래프 / 백필 / Git Sync / DataHub Lineage<br>• dbt 영역 + Airflow operator 영역 분담 + ActionGroup<br>• 수집 → ETL lineage 연결 (dbt만으론 불가)<br>• Custom Operator triage / Userlake BQ 전환 / extract 운명 |
+**팀용 LLM 위키의 소스 레포.** 조사·PoC·결정 기록을 여기 쌓고, 위키로 옮기기 좋은 형태(폴더별 결론 노트 + README 컨텍스트)로 유지한다.
 
 **확정 사항** (이 레포에서는 재논의하지 않음):
 
 - ETL: athlon (neptune) → **dbt** 로 전환 ✓
 - 쿼리 엔진: presto → **BigQuery** ✓
 
-쿼리 엔진(Presto→BigQuery), 데이터 스토리지(hudi→iceberg/BQ Native), 추출, 카탈로그(datahub)의 **인프라/도구 선택** 자체는 다른 담당자/레포에서 조사한다.
+데이터 스토리지(hudi→iceberg/BQ Native), 추출, 카탈로그(datahub)의 **인프라/도구 선택** 자체는 다른 담당자/레포에서 조사한다.
+
+## 인덱스
+
+각 폴더의 entry point는 `README.md`(컨텍스트)와 숫자가 가장 낮은 결론 노트(`0_결론` 또는 `1_개요`).
+
+### 보고 (루트)
+
+- [[0_GCP 이관 보고]] — GCP 이관 전체 보고
+- [[0_Cloud Composer 인프라 보고]] — Composer 인프라 보고
+
+### 주제 폴더
+
+| 폴더 | 다루는 것 | 컨텍스트 |
+|---|---|---|
+| `스케줄러/` | Airflow 운영 (Composer vs Self-managed), 비용·권한·배포, Composer 3 신규 환경 구축(Terraform), PoC | [[스케줄러/README\|README]] |
+| `애슬론/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[애슬론/README\|README]] |
+| `dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[dbt/README\|README]] |
+| `userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트·다운사이즈·비용 결정 | [[userlake/README\|README]] |
+| `asset/` | Airflow 3 Asset scheduling 실전 (실측 + 제약 + 3.2/3.3 개선 + MDL aligning) | [[asset/README\|README]] |
+| `spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[spark-apps/README\|README]] |
+| `deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[deploy/README\|README]] |
+| `공유/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[공유/README\|README]] |
+| `베리즈 데이터 이관/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[베리즈 데이터 이관/README\|README]] |
+| `attachments/` | 이미지·첨부 모음 | — |
 
 ---
 
@@ -175,8 +194,3 @@ source: <원본 URL, import한 경우만>
 
 ---
 
-## 작업 폴더
-
-- [[스케줄러/1_개요]] — Airflow 스케줄러 (Composer vs Self-managed) + Airflow에서 dbt 실행 · 컨텍스트: [[스케줄러/README]]
-- [[애슬론/1_개요]] — athlon 플랫폼 재구현 (dbt 수용 / Userlake BQ 전환 / extract / workflows) · 컨텍스트: [[애슬론/README]]
-# diana-notes
