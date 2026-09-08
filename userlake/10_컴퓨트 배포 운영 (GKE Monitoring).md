@@ -19,7 +19,8 @@ created: 2026-06-28
 > 1. base image 사내 → public + Artifact Registry
 > 2. kinit sidecar 제거 ([[7_Kerberos 제거 (인증 흐름 재설계)]])
 > 3. 메트릭 / 로그 → Cloud Monitoring / Logging
-> 4. **HPA 트리거 재설계** — 현재 RabbitMQ 큐 길이 기반 → Pub/Sub subscription backlog 기반
+> 4. **오토스케일 신규 도입 검토** — 현재는 HPA 없음, dev/prod 모두 `replicas: 1` 고정 (§1, SPOF) → 이관 시 Pub/Sub subscription backlog 기반 HPA 도입 후보
+>    (수정 2026-09-08: 기존 "현재 RabbitMQ 큐 길이 기반 HPA" 서술은 오기 — 본문 §1 실측과 모순)
 
 ---
 

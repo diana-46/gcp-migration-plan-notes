@@ -237,7 +237,7 @@ HDFS → GCS 요약:
    - `StageSubmitter` 의 ack/nack/requeue → ack deadline + DLQ + retry policy 로 재설계
    - `producer/StageResultProducer` Pub/Sub publish 로 교체
    - `config/RabbitMQ*StageConfig.kt` 8개 → Pub/Sub subscription 설정
-   - 큐 길이 기반 HPA 트리거 재구성
+   - Pub/Sub backlog 기반 오토스케일(HPA) 신규 도입 검토 — 현재는 HPA 없음, replicas 1 고정 ([[10_컴퓨트 배포 운영 (GKE Monitoring)]] §1)
 3. **HDFS → GCS**
    - `core/util/filerw/` 에 `FileSystemType.GCS` 추가
    - `GcsFileReadWriter` 신규 (`HdfsFileReadWriter` 와 유사 패턴)
