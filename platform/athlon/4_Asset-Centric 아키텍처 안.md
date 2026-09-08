@@ -8,7 +8,7 @@ tags:
   - proposal
   - decision
 created: 2026-05-14
-updated: 2026-05-14
+updated: 2026-09-08
 ---
 
 # Asset-Centric 아키텍처 안
@@ -405,7 +405,7 @@ def user_action_raw():
 - [ ] 백엔드 / 프론트 / DE 인력 확보 가능?
 - [ ] 일정: 6개월 ~ 1년 예상. GCP 이관 데드라인과 sync 가능?
 - [ ] dbt project를 athlon 안에 host? 별도 git repo로 분리?
-- [ ] Compile 시점: athlon backend (실시간) / CI (git push) / Composer DAG Bundle
+- [ ] Compile 시점: athlon backend (실시간) / CI (git push)
 - [ ] Cosmos 도입 여부 (dbt 모델 = 모델별 Airflow task)
 - [ ] athlon_runtime 표준 operator library 어디서 호스팅 / 버저닝
 

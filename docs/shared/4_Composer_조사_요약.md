@@ -16,7 +16,7 @@ Executor
   └─ CeleryKubernetesExecutor (Composer 3 강제) — 경량 Celery + 중량 K8s 병행
 
 DAG 배포
-  └─ GitDagBundle or GCS rsync (팀 저장소별 자율)
+  └─ GCS rsync (DAG Bundles 는 Composer 차단)
 
 메타데이터 DB
   └─ Composer 관리 Cloud SQL, 20GB 상한 유지 필요
@@ -96,7 +96,7 @@ Provider 패키지
   - Jenkins + GCS sync (기존 관성)
   - **GitDagBundle** (Airflow 3 native, PR/version-lock/refresh_interval 설정)
 - **우리 선택**: 팀별 저장소 + GCS rsync (`gsutil rsync -c -d`)
-  - GitDagBundle 은 미래 옵션 (팀별 refresh_interval 관리 여지)
+  - GitDagBundle 은 Composer 가 차단해 사용 불가 — 향후 지원 시 재검토
 - 상세: [[platform/airflow/11_DAG Bundles와 배포 전략]]
 
 ### 9. 메타데이터 DB

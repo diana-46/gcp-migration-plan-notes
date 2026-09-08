@@ -6,7 +6,7 @@ tags:
   - 스케줄러
   - version
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-09-08
 ---
 
 # Airflow 2 vs 3 비교
@@ -149,7 +149,7 @@ Airflow 3:
 | Airflow 2.x | **Airflow 3.x** |
 | GKE 자동, CeleryKubernetesExecutor 고정 | 동일 + Edge Executor 옵션 가능성 |
 | Webserver / Scheduler 결합 deployment | API-first 구조 반영 |
-| DAG sync: GCS bucket | DAG Bundles 지원 (GCS 호환 유지) |
+| DAG sync: GCS bucket | GCS sync 유지 (DAG Bundles 는 Composer 가 차단) |
 | Backfill: CLI/API 위주 | UI Backfill 사용 |
 
 > **결정에 주는 영향**: GCP가 Composer 3을 새 환경의 기본으로 밀고 있어, 신규 환경 만든다면 Composer 3 (Airflow 3) 선택이 합리적. Self-managed라면 자유롭지만, **2026년 시점에 신규를 2.x로 가는 건 비추**.

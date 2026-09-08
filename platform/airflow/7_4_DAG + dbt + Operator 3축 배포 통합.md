@@ -11,7 +11,7 @@ tags:
   - artifact-registry
   - deployment
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-09-08
 ---
 
 # DAG + dbt + Operator 3축 배포 통합 전략
@@ -54,10 +54,9 @@ updated: 2026-06-12
 │                              ▲                                       │
 │                              │ import                                │
 │  ┌───────────────────────────┴─────────────────────────────────┐   │
-│  │  Layer 3 — Airflow DAG (11_DAG Bundles)                     │   │
-│  │   GitDagBundle (repo_url=git@.../<domain>-airflow-dags.git) │   │
-│  │   refresh_interval = 86400 (Pull off)                       │   │
-│  │   Trigger: Jenkins → `gcloud composer ... bundles refresh`  │   │
+│  │  Layer 3 — Airflow DAG (GCS sync — 11_DAG Bundles 참조)     │   │
+│  │   git push → CI → gsutil rsync gs://<bucket>/dags/<domain>/ │   │
+│  │   (DAG Bundles 는 Composer 가 차단 — GCS sync 가 유일 경로) │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                              ▲                                       │
 │                              │ Cosmos DbtTaskGroup 이 읽음          │
@@ -81,7 +80,7 @@ updated: 2026-06-12
 | ----------------------- | --------- | ------------------------------- | ------------------------------------- | ---------------------------------- | ------------------------------------------------ |
 | **Custom Operator 패키지** | 낮음 (월)    | SemVer (`v1.0.0`)               | 수십 분 (release → install → env update) | `==1.2.3` (pyproject.toml)         | 환경별 lock 버전 다르게                                  |
 | **dbt Project**         | 중 (주~일)   | git tag 또는 commit               | 분 (CI 에서 manifest 생성 → GCS sync)      | git ref + manifest checksum        | `profiles.yml` 의 target 분기 (dev/composer)        |
-| **Airflow DAG**         | 높음 (일~시간) | git ref (`main` / `production`) | 즉시 ~ Jenkins 트리거                      | bundle commit hash (Airflow UI 표시) | GitDagBundle `tracking_ref` 분기 또는 GCP project 분리 |
+| **Airflow DAG**         | 높음 (일~시간) | git ref (`main` / `production`) | 분 (CI → GCS sync)                      | git commit hash (CI 배포 로그) | 브랜치별 CI 배포 버킷 분기 + GCP project 분리 |
 
 → 세 자산이 **lifecycle / 변경 속도가 모두 다름**. 한 release pipeline 에 묶으면 가장 느린 자산이 가장 빠른 자산의 속도를 끌어내림.
 
@@ -91,9 +90,9 @@ updated: 2026-06-12
 |---|---|---|---|
 | **Python (`airflow-providers`)** | Operator 패키지 release pipeline (GitHub Actions, tag push 시) | Composer 환경 (`requirements.txt` + extra-index-url) | 7_3 §4.3 |
 | **Container** (필요 시) | dbt runner image build pipeline | KubernetesPodOperator (dbt 의존성 격리 시) | 현재 미도입. Composer PyPI 옵션으로 `dbt-bigquery` install 검증 완료 ([[03_bq_dbt_run_in_composer]]) |
-| **Container** (필요 시) | DAG bundle image build | Composer DAG bundle | 현재 GitDagBundle 직행 결정 |
+| **Container** (필요 시) | — | — | DAG 는 GCS sync 배포라 컨테이너 불필요 |
 
-→ 현재 결정은 **Python repo 만 사용**. dbt / DAG 는 GCS sync + GitDagBundle 로 충분.
+→ 현재 결정은 **Python repo 만 사용**. dbt / DAG 는 GCS sync 로 충분.
 
 ## 5. 레포 구조 (musicdata 팀 패턴 차용)
 
@@ -107,7 +106,7 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
     operators/ sensors/ callbacks/ ...
   pyproject.toml
 
-<domain>-airflow-dags/          ← Layer 3: DAG repo (도메인별 N개, GitDagBundle)
+<domain>-airflow-dags/          ← Layer 3: DAG repo (도메인별 N개, GCS sync 배포)
   dags/
     <service>/<dag>.py
   dbt_projects/ (선택)          ← Layer 2 동봉 옵션 A
@@ -167,11 +166,9 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 [Layer 3: Airflow DAG]
   PR → CI (DAG import test / dag validation) → main merge
                               ↓
-                       작업자 Jenkins job 실행 (수동 트리거)
+                       CI 가 gsutil rsync → gs://<composer-bucket>/dags/<domain>/
                               ↓
-                       gcloud composer ... bundles refresh -- <bundle_name>
-                              ↓
-                       Composer 가 git pull → DAG 반영
+                       Composer 가 GCS sync 로 DAG 반영
 ```
 
 세 pipeline 이 서로의 release 를 알 필요 없음. **인프라 layer 에서 자연스럽게 합류**.
@@ -180,11 +177,11 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 
 세 자산이 환경 분리에 일관된 정책을 따라야 함:
 
-| 환경 | Operator 패키지 lock | dbt manifest | DAG bundle tracking_ref | refresh_interval |
-|---|---|---|---|---|
-| dev | `==X.Y.Z-dev` 또는 latest | `main` 의 manifest 자동 sync | `main` | 60s (빠른 iteration) |
-| stg | `==X.Y.Z-rc` | `release` 브랜치 manifest | `release` | 300s |
-| prod | `==X.Y.Z` (stable) | `production` tag manifest | `production` | 86400 (Pull off, [[11_DAG Bundles와 배포 전략]] §4 결정) |
+| 환경 | Operator 패키지 lock | dbt manifest | DAG 배포 (GCS sync 소스 브랜치) |
+|---|---|---|---|
+| dev | `==X.Y.Z-dev` 또는 latest | `main` 의 manifest 자동 sync | `main` — merge 시 CI 자동 배포 |
+| stg | `==X.Y.Z-rc` | `release` 브랜치 manifest | `release` — merge 시 CI 자동 배포 |
+| prod | `==X.Y.Z` (stable) | `production` tag manifest | `production` — 수동 승인 후 CI 배포 |
 
 환경 분리의 물리적 방법은 **GCP project 단위 Composer 환경 분리** ([[11_DAG Bundles와 배포 전략]] §6 결정 인용).
 
@@ -213,9 +210,8 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 
 ### Layer 3 — Airflow DAG ([[11_DAG Bundles와 배포 전략]])
 
-- ✅ Composer 이관 시 옵션 (2) GitDagBundle 채택
-- ✅ Pull off + Push only 패턴 (`refresh_interval = 86400`)
-- ✅ Jenkins 버튼 → `gcloud composer ... bundles refresh`
+- ✅ 배포 = **GCS sync** — DAG Bundles 는 Composer 가 차단해 사용 불가 ([[PoC/02_dag_deployment]])
+- ✅ Push only 패턴: PR merge → CI (import test) → `gsutil rsync`
 - ✅ 환경 분리는 GCP project 단위 Composer 환경
 - ✅ Git deploy key/PAT → Secret Manager, 환경 SA 에 secretAccessor
 - ✅ stale / drift 알람 (Cloud Monitoring)

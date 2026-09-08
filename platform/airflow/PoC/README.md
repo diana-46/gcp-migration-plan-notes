@@ -175,7 +175,7 @@ wheel build → twine upload → AR push
 
 ---
 
-### Step 5. DAG Bundles 동작 확인
+### Step 5. DAG Bundles 동작 확인 ✅ 완료 — Composer 가 lock, GCS sync 만 가능 ([[02_dag_deployment]])
 
 **목표**: Airflow 3 의 DAG Bundles 가 Composer 에서 어떻게 동작하나.
 

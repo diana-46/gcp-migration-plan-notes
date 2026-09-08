@@ -6,7 +6,7 @@ tags:
   - airflow
   - 스케줄러
 created: 2026-05-11
-updated: 2026-05-15
+updated: 2026-09-08
 source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+Cloud+Composer+2+vs+Self-managed
 ---
 
@@ -31,7 +31,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 |---|---|---|
 | Executor 선택 | `CeleryExecutor,KubernetesExecutor` 멀티 구성 (Celery default, 변경 어려움) | 자유 |
 | Python 패키지 | PyPI 가능, 시스템 라이브러리 제약 | 자유 (Dockerfile 직접) |
-| DAG 배포 | GCS bucket sync + DAG Bundles | git-sync sidecar / PV / 이미지 포함 / DAG Bundles |
+| DAG 배포 | **GCS bucket sync 만 가능** (DAG Bundles 는 Composer 가 차단) | git-sync sidecar / PV / 이미지 포함 / DAG Bundles |
 | 메타스토어 DB | Cloud SQL 자동 (PostgreSQL 고정, 선택 불가) | 직접 운영 (Cloud SQL / AlloyDB / self-hosted) |
 | airflow.cfg | 일부 lock | 완전 자유 |
 | 모니터링/로깅 | Cloud Logging/Monitoring 자동 | 직접 구성 |
@@ -54,7 +54,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 - Cloud Logging / Monitoring 통합
 - Secret Manager backend 연동
 - Workload Identity 설정 (환경 SA)
-- DAG 폴더 GCS sync + DAG Bundles
+- DAG 폴더 GCS sync (DAG Bundles 불가)
 - 백업 / 복구 (Snapshot)
 - 보안 패치 / 업그레이드
 - IAP 인증 + IAM ↔ Airflow Role 자동 매핑
@@ -144,7 +144,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 | # | 항목 | Composer 3 | Self-managed |
 |---|---|---|---|
 | 1 | **사내 LDAP 인증** | ❌ → **IAP + Google IAM 강제**. Google Workspace 로 통과 가능한지 확인 필요 | ✅ Okta/OIDC 가능 ([[8_Composer 권한 및 인증]]) |
-| 2 | **사내 git (`github.kakaocorp.com`) SSH + Vault** | DAG 배포 흐름 통째로 변경. GCS sync 또는 DAG Bundles + Secret Manager | git-sync sidecar 그대로 가능 (사내 git 접근 패턴 유지) |
+| 2 | **사내 git (`github.kakaocorp.com`) SSH + Vault** | DAG 배포 흐름 통째로 변경. GCS sync + Secret Manager (DAG Bundles 불가) | git-sync sidecar 그대로 가능 (사내 git 접근 패턴 유지) |
 | 3 | **사내망 ↔ GCP VPC 연결** | Cloud Interconnect / VPN / Private Service Connect 필요 (양쪽 동일) | 동일 |
 | 4 | **사내 PyPI / wheel 직접 설치** | Artifact Registry private repo 통과. 사내 PyPI mirror 필요 | 자유 |
 | 5 | **Worker queue 5종 → 패턴 전환** | `hadoop`/`doopey` 폐기, `cloud`/`http` 는 Celery, **`sensor:40` 은 deferrable Sensor 로 전환** ⭐ | queue 별 worker 그대로 유지 가능 |
@@ -184,7 +184,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 | `sensor` 워커 → deferrable Sensor 전환 (concurrency 40 → triggerer) | 1~2주 |
 | Custom plugin/operator 인벤토리 + PyPI 패키지화 | 2~3주 |
 | LDAP → IAP 권한 모델 재설계 | 1~2주 |
-| 사내 git → GCS sync (or DAG Bundles) 흐름 | 1주 |
+| 사내 git → GCS sync 흐름 | 1주 |
 | 사내망 VPC 연결 설계 + 보안 검증 | 인프라 팀 협의 (가변) |
 | **총 추정** (인프라 협의 제외) | **6~12주** |
 

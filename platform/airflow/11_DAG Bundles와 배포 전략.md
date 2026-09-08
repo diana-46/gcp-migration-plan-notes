@@ -7,12 +7,15 @@ tags:
   - dag-bundles
   - deployment
 created: 2026-05-15
-updated: 2026-05-15
+updated: 2026-09-08
 ---
 
 # DAG Bundles와 배포 전략
 
-> Airflow 3에서 도입된 DAG Bundles 개념과, 여러 팀/여러 repo의 DAG을 Cloud Composer에서 어떻게 관리·배포할지 정리.
+> ## ❌ 결론: Composer 3 에서 DAG Bundles 는 **사용 불가**
+>
+> Composer 가 bundle 설정을 막아놓아 배포 방식은 **GCS bucket sync 만 가능** (PoC 확인 — [[PoC/02_dag_deployment]]).
+> 실제 배포 운영안(GitHub Actions → GCS sync)은 [[1_개요]] §4. 아래 DAG Bundles 내용은 **Self-managed 로 갈 경우 / Composer 가 향후 지원할 경우의 참고 자료**다.
 >
 > 기준: **Airflow 3 / Composer 3**.
 
