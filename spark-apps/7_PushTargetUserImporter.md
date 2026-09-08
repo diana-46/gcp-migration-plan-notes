@@ -7,7 +7,7 @@ tags:
   - hudi
   - push
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # PushTargetUserImporter — 앱 상세
@@ -164,7 +164,7 @@ data_type=target/     part-...  (18:01 — 배치 1개)
 case "URL" => Source.fromURL(targetFile)   // executor 에서 외부 HTTP GET
 ```
 
-- executor 마다 외부로 나가는 네트워크 호출이 발생한다. GKE/Dataproc 으로 옮기면 **egress 경로·방화벽·서비스 계정** 재설계가 필요하다.
+- executor 마다 외부로 나가는 네트워크 호출이 발생한다. GKE(Spark Operator) 로 옮기면 **egress 경로·방화벽·서비스 계정** 재설계가 필요하다.
 - 재시도·타임아웃 처리가 코드에 없다. 대상 서버가 느리면 태스크가 그대로 매달린다.
 - BigQuery 로는 표현할 수 없는 동작이다. **SQL 로 대체 불가.**
 
@@ -187,7 +187,7 @@ GCP  : GCS                                            (팀 확정)
 ### ③ 소스가 Hudi 다
 
 `t_push_group` 을 Hudi 로 읽는다. mandu/Debezium CDC 파이프라인 산출물이며
-Datastream + BQ 로 대체되면 이 읽기 방식도 함께 바뀐다.
+CDC 수집(BQ Sink) + BQ 로 대체되면 이 읽기 방식도 함께 바뀐다.
 
 ### ④ 파티션 컬럼을 BigQuery 로 그대로 옮길 수 없다
 
@@ -225,7 +225,7 @@ athlon 산출물이 GCS 로 간다는 게 정해지면서(§5-②) **난점 4개
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | **A. Composer + Python** | GCS/HTTP 파일 fetch·파싱을 Python 으로, 결과만 BQ 적재 | **유력.** 연산이 "파일 읽어 CSV 첫 컬럼 뽑기"뿐이다. GCS 읽기는 Spark 보다 Python 이 오히려 간단하다 |
-| B. Dataproc lift | Spark 그대로 (`gs://` 경로로만 변경) | 변경 최소. 규모가 크면 유리 |
+| B. Spark lift (GKE Spark Operator) | Spark 그대로 (`gs://` 경로로만 변경) | 변경 최소. 규모가 크면 유리 |
 | C. BQ SQL 재구현 | — | **불가.** 외부 URL fetch 를 SQL 로 표현할 수 없다 |
 
 **A 와 B 의 갈림길은 데이터 규모다.**
@@ -260,7 +260,7 @@ Spark 이 실제로 하는 일은 병렬 fetch + parquet write 정도이고,
 - ~~athlon 추출 결과의 GCP 이관 방향~~ → **GCS 로 확정** (§5-②).
   남은 확인: 파일 형식·인코딩 유지 여부, GCS 경로 규칙
 - `target_type='URL'` 의 대상 서버가 어디인지 (사내/외부, egress 정책) — **남은 난점 중 최대**
-- **일별 처리 규모** — Composer+Python(A) vs Dataproc lift(B) 판단 근거
+- **일별 처리 규모** — Composer+Python(A) vs Spark lift(B) 판단 근거
 - `/modeled/push` 의 실제 writer 와 `push_user` 테이블 소비처 (§3)
 - `push_v2` `data_type=target` 을 두 앱이 공유하는 것이 의도인지 (§4)
 - `boracay_production` 하드코딩이 의도인지 (§2)

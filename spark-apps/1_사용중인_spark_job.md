@@ -4,8 +4,8 @@ Athlon `actions_prod` 기준으로 **active DAG (`dag_prod.is_paused=0 AND dag_p
 
 ## 이관 전제
 
-- 이관 대상: **GCP** (Dataproc / BigQuery / Cloud SQL / GCS 등)
-- **DB 수집 파이프라인은 Datastream으로 대체 예정** — 소스 DB(MySQL/Mongo)에서 데이터를 끌어오는 부분은 CDC 기반 Datastream이 담당할 계획.
+- 이관 대상: **GCP** (GKE Spark Operator / BigQuery / Cloud SQL / GCS 등) — Spark 런타임은 **GKE Spark Operator 로 일원화** ([[3_spark-apps 런타임 버전 결정]]). 팀 결정(2026-07-29 TDR-006)엔 "Dataproc Serverless 백필·대규모 재처리 병행" 조항이 있으나, **백필도 GKE 에서 처리하고 Dataproc 은 쓰지 않는다** (2026-09-08, 모니터링 지점 일원화 — 실행 환경을 두 개 운영하지 않음)
+- **DB 수집 파이프라인은 CDC 수집(Debezium → Kafka → BigQuery Sink Connector)으로 대체** — 소스 DB(MySQL/Mongo)에서 데이터를 끌어오는 부분은 CDC 파이프라인이 담당. (기존에 검토하던 Datastream은 기각됨 — 수집 트랙 결정, 팀 위키 CDC 개요 참조)
 
 이관 검토 대상에서 제외한 것들 (기존 결정):
 - `run_presto_sql_khp.sh` (Presto CLI, 이관 불필요)
@@ -23,16 +23,16 @@ Athlon `actions_prod` 기준으로 **active DAG (`dag_prod.is_paused=0 AND dag_p
 | 3 | `imports.AgeGenderCategorizingImporter` | `run.sh` (직접 지정) | BQ SQL 재설계 (아래 [특수 케이스](#3-agegendercategorizingimporter-특수-케이스) 확인) |
 | 4 | `exports.mysql.MySqlDataFrameExporter` | `run_mysql_export.sh` | **Reverse ETL 유지 필요** (아래 [특수 케이스](#4-mysqldataframeexporter-특수-케이스)) |
 | 5 | `exports.mysql.MySqlDataFrameChangeApplier` | `run.sh` (직접 지정) | Hive→MySQL delta sync (아래 [특수 케이스](#5-mysqldataframechangeapplier-특수-케이스)) |
-| 6 | `transform.DataFrameTransformer` (`-t trevi`) | `run_transformer_trevi.sh` | Dataproc lift 권장 (아래 [특수 케이스](#6-dataframetransformer-trevi-특수-케이스)) |
+| 6 | `transform.DataFrameTransformer` (`-t trevi`) | `run_transformer_trevi.sh` | Spark lift (GKE Spark Operator) 권장 (아래 [특수 케이스](#6-dataframetransformer-trevi-특수-케이스)) |
 | 7 | `merge.UnifySchemaMerger` | `unify_schema_merger.sh` | **폐기 유력** (아래 [특수 케이스](#7-unifyschememerger-특수-케이스)) |
 | 8 | `etl.TicketUseRecord` | `adhoc/run_ticket_use_record.sh` | **앱 폐기 + BQ SQL 재구현** (아래 [특수 케이스](#8-ticketuserecord-특수-케이스)) |
 | 9 | `gc.HdfsGarbageCollector` | `run.sh` (직접 지정) | **폐기 유력** (dump 앱 이관되면 GC 대상 자체가 사라짐, 아래 [특수 케이스](#9-hdfsgarbagecollector-특수-케이스)) |
 
 **초안 판정 요약 (앱별 특수 케이스 분석 후 갱신)**
 - **폐기 유력**: #7 UnifySchemaMerger (fallback + upstream 이관제외), #8 TicketUseRecord (BQ SQL로 재구현), #9 HdfsGarbageCollector (대상 사라짐)
-- **CDC로 대체 (Datastream)**: #1 Mongo Importer, #2 MySql Importer (특수 케이스 확인 후)
+- **CDC로 대체 (Debezium → Kafka → BQ Sink)**: #1 Mongo Importer, #2 MySql Importer (특수 케이스 확인 후)
 - **재설계 필요**: #3 AgeGenderCategorizingImporter (PII 정책 이슈), #5 MySqlDataFrameChangeApplier (조직 경계)
-- **유지 (Dataproc lift 유력)**: #4 MySqlDataFrameExporter (reverse ETL 유지 필요), #6 DataFrameTransformer trevi (PII 마스킹)
+- **유지 (Spark lift — GKE Spark Operator)**: #4 MySqlDataFrameExporter (reverse ETL 유지 필요), #6 DataFrameTransformer trevi (PII 마스킹)
 
 ## 앱별 특이점 (이관 관점)
 
@@ -41,9 +41,9 @@ Athlon `actions_prod` 기준으로 **active DAG (`dag_prod.is_paused=0 AND dag_p
 | 1 | MongoDataFrameImporter | Mongo → HDFS/Hive dump | aggregation pipeline 지원 · 파티션 키 커스터마이즈 · Hive view + Presto suffix 테이블 자동 생성 | CDC 이관 검토 (특수 케이스 확인) | 왜 CDC 대상에서 빠져있는지 (특수 케이스 섹션 참고) |
 | 2 | MySqlDataFrameImporter | MySQL → HDFS dump | 커스텀 `KakaoPageMySQLDialect` (KS-7008 bit→binary 변환) · 추정 row count로 파티셔닝 · WHERE 필터 지원 | CDC 이관 검토 (특수 케이스 확인) | 왜 CDC 대상에서 빠져있는지 (특수 케이스 섹션 참고) |
 | 3 | AgeGenderCategorizingImporter | User 테이블 → 연령·성별 카테고리 산출 | `old`/`new`/`new_global` 3종 쿼리 · MySQL 함수(YEAR, TIMESTAMPDIFF, COALESCE) 하드코딩 · MySQL slave에서 range partition read | BQ SQL (스케줄드 쿼리 / dbt) 재설계 | 3종 쿼리 분기가 왜 있는지, 지금도 다 쓰는지 · 카테고리 로직 재구현 시 결과 검증 |
-| 4 | MySqlDataFrameExporter | DataFrame → MySQL write (reverse ETL) | 커스텀 SaveMode (`insertignore`/`replace`) · 기본 1 파티션 · 사내 Spark 확장 · 소비처가 타팀 서비스 | Reverse ETL 유지 (구현 방식만 결정) | GCP에서 어떤 방식으로 reverse ETL 구현할지 (Dataproc / Composer+Python / Dataflow) |
-| 5 | MySqlDataFrameChangeApplier | Neptune snapshot delta → 정산 MySQL sync | 서비스 DB→정산 DB 마스터 데이터 hourly 복제 · Neptune hive snapshot 앞뒤 시간 비교 · `INSERT IGNORE`+`DELETE`+`REPLACE INTO` · 사내 확장 사용 | Dataproc lift 또는 BQ 경유 두 단계 | Neptune 대체안 · 정산 팀과의 sync 방식 협의 |
-| 6 | DataFrameTransformer (`-t trevi`) | page_trevi 로그 JSON → Parquet + PII 마스킹 | PII 컬럼 exclude 필수 (`userInfo_birth`, `ifa`) · rewarded는 `postbackId` dedup · age 자동 카테고리화 UDF · backfill DAG 2개 hourly | Dataproc lift 권장 | backfill DAG 상태 · JSON에 age 필드 존재 여부 · 소스 JSON 생성 파이프라인 이관 방향 |
+| 4 | MySqlDataFrameExporter | DataFrame → MySQL write (reverse ETL) | 커스텀 SaveMode (`insertignore`/`replace`) · 기본 1 파티션 · 사내 Spark 확장 · 소비처가 타팀 서비스 | Reverse ETL 유지 (구현 방식만 결정) | GCP에서 어떤 방식으로 reverse ETL 구현할지 (Spark on GKE / Composer+Python / Dataflow) |
+| 5 | MySqlDataFrameChangeApplier | Neptune snapshot delta → 정산 MySQL sync | 서비스 DB→정산 DB 마스터 데이터 hourly 복제 · Neptune hive snapshot 앞뒤 시간 비교 · `INSERT IGNORE`+`DELETE`+`REPLACE INTO` · 사내 확장 사용 | Spark lift (GKE Spark Operator) 또는 BQ 경유 두 단계 | Neptune 대체안 · 정산 팀과의 sync 방식 협의 |
+| 6 | DataFrameTransformer (`-t trevi`) | page_trevi 로그 JSON → Parquet + PII 마스킹 | PII 컬럼 exclude 필수 (`userInfo_birth`, `ifa`) · rewarded는 `postbackId` dedup · age 자동 카테고리화 UDF · backfill DAG 2개 hourly | Spark lift (GKE Spark Operator) 권장 | backfill DAG 상태 · JSON에 age 필드 존재 여부 · 소스 JSON 생성 파이프라인 이관 방향 |
 | 7 | UnifySchemaMerger | Tiara 로그 다중 스키마 파일 병합 (**fallback**) | **`trigger_rule: all_failed`** — 정상 흐름에 실행 안 됨 · upstream `DataFrameMerger` 실패 시에만 리커버리 · 파일명 index 11부터 substring 그룹핑 | 폐기 유력 (upstream이 이관 제외라 fallback도 무의미) | 실제 실행 빈도 · 스키마 다형성 원인 · GCP 이관 후 스키마 안정성 |
 | 8 | TicketUseRecord | buydb Hudi 16샤드 + Neptune parquet 조인 → tmp 산출 | 5-스텝 chain 중 중간 계산 · 16 샤드 union · broadcast join · OLD_DB 코드 잔존 · Jira 3회 개정 | **앱 폐기 + BQ SQL 재구현** | Neptune·downstream export 이관 방향 · `boracay` 정체 · dead code 정리 |
 | 9 | HdfsGarbageCollector | HDFS timestamp suffix 디렉토리 TTL GC | 파일 mtime 아니라 **디렉토리 이름의 10자리 timestamp** 기반 · dump 앱 출력 정리 · exclude prefix (`t_series_product` 등 Neptune 소스) · Spark job이지만 실제 병렬 처리 없음 (client 모드) | **폐기 유력** (dump 앱들 이관되면 대상 사라짐) | exclude prefix가 downstream 의존이면 GCP에서도 유지 필요 · 이관 완료 전까진 유지 |
@@ -151,11 +151,11 @@ run.sh AgeGenderCategorizingImporter
 - 이 가설이 맞다면 CDC로 대체 불가한 근본 이유가 여기에 있음 (단순히 배치라서가 아니라, raw PII를 데이터 레이크로 옮길 수 없어서)
 
 **CDC/이관 관점 함의**
-- 위 가설이 맞으면 **Datastream이 raw birthday/gender를 BQ에 랜딩하는 것도 같은 정책 위반**이 됨
+- 위 가설이 맞으면 **CDC 수집이 raw birthday/gender를 BQ에 랜딩하는 것도 같은 정책 위반**이 됨
 - 이관 시 옵션:
-  1. Spark/Dataproc에서 이 read-time 범주화 그대로 유지
+  1. Spark(GKE Spark Operator)에서 이 read-time 범주화 그대로 유지
   2. 소스 DB에 view/materialized view로 범주화된 값만 노출하고, 그 view를 CDC 대상으로
-  3. Datastream 컬럼 exclude + 이후 별도 안전한 채널로 birthday만 read → 범주화 → 결과만 BQ에 저장
+  3. CDC 소스 단계에서 컬럼 exclude (`column.exclude.list`) + 이후 별도 안전한 채널로 birthday만 read → 범주화 → 결과만 BQ에 저장
 - **CDC로 못 옮기는 게 정책 이유라면 이관 후에도 같은 형태의 배치 ETL이 필요**
 
 **❓ 논의 필요**
@@ -204,10 +204,10 @@ Dataflow는 비용 이슈로 제외. 실질적으로 A, B 둘 중 선택.
 
 | 옵션 | 방식 | 장단 |
 |---|---|---|
-| **A. Dataproc lift** | Spark 앱 그대로 + 사내 jar 유지 | 로직 그대로 재사용, 커스텀 SaveMode(`insertignore`/`replace`) 재구현 불필요 · Dataproc이 이미 로그 수집용으로 존재하면 부담 최소 |
+| **A. Spark lift (GKE Spark Operator)** | Spark 앱 그대로 + 사내 jar 유지 | 로직 그대로 재사용, 커스텀 SaveMode(`insertignore`/`replace`) 재구현 불필요 · Spark 런타임(GKE Spark Operator)이 이미 확정돼 있어 부담 최소 |
 | **B. Composer + Python** | Airflow(Composer)에서 BQ read → SQLAlchemy로 Cloud SQL write. `INSERT ... ON DUPLICATE KEY UPDATE`로 `insertignore`/`replace` 표현 | 심플, 저비용, 소량 데이터에 적합 · 대용량 시 성능 이슈 |
 
-**로그 수집 파이프라인이 이미 Dataproc을 쓸 예정이라 → 옵션 A가 가장 자연스러움.** 인프라 공유 + Spark 코드 그대로 재사용. 별도 인프라 관리 부담 없음.
+**spark-apps Spark 런타임이 GKE Spark Operator로 확정됐으므로 → 옵션 A가 가장 자연스러움.** 인프라 공유 + Spark 코드 그대로 재사용. 별도 인프라 관리 부담 없음.
 
 옵션 B는 이 앱 하나만 별도로 뽑아 이관하고 싶을 때 유효.
 
@@ -256,16 +256,16 @@ snapshot_{table}_{unix_ts} (hive parquet)
 **GCP 이관 후 예상 chain**
 ```
 Service Cloud SQL
-   ↓ Datastream (기존 CDC의 GCP 버전)
+   ↓ CDC 수집 (Debezium → Kafka → BQ Sink)
 BQ landing table ← _ro (Hudi) 대체
    ↓ BQ scheduled query / view / dbt ← Neptune 대체
 snapshot BQ 테이블 (또는 단순 view)
-   ↓ Reverse ETL (Dataproc lift or Composer+Python) ← ChangeApplier 대체
+   ↓ Reverse ETL (Spark lift on GKE Spark Operator or Composer+Python) ← ChangeApplier 대체
 정산 Cloud SQL
 ```
 
 **핵심 통찰**
-- `_ro`는 이미 CDC로 수집한 원천 (지금은 Hudi/Hadoop). 즉 CDC 자체는 이미 존재. Datastream은 그 CDC의 GCP 버전.
+- `_ro`는 이미 CDC로 수집한 원천 (지금은 Hudi/Hadoop). 즉 CDC 자체는 이미 존재. GCP에서도 같은 Debezium 소스를 유지하고 Kafka 이후 적재부만 BQ Sink로 교체된다.
 - Neptune의 Presto CTAS + 명시적 CAST는 Hudi 스키마 drift 방지 목적. BQ 랜딩 스키마가 안정적이면 view 하나로 대체 가능해 매우 단순해질 수 있음.
 - 정산 팀이 BQ 직접 접근 가능하면 ChangeApplier 자체가 필요 없어짐 (단, 서비스 read 패턴상 어려울 가능성).
 
@@ -289,7 +289,7 @@ snapshot BQ 테이블 (또는 단순 view)
 | 왜 diff apply | 시간별 변경분만 반영 | 서비스 실시간 참조 → TRUNCATE+INSERT 못함 |
 
 이관 시 앱 자체는 하나로 다루되, 대체 방안은 케이스별로 다름:
-- **Case A**: Datastream + BQ + 정산 팀 협의 (조직 경계 이슈)
+- **Case A**: CDC 수집 + BQ + 정산 팀 협의 (조직 경계 이슈)
 - **Case B**: BQ scheduled query + Cloud SQL reverse ETL, 또는 Cloud SQL 안에서 직접 stored procedure로 재계산 (조직 경계 없어서 유연)
 
 **존재 이유 — 조직 경계 추정**
@@ -301,16 +301,18 @@ snapshot BQ 테이블 (또는 단순 view)
 
 | 옵션 | 방식 | 장단 |
 |---|---|---|
-| **A. Dataproc lift** | Spark 앱 그대로 유지 (Neptune snapshot은 BQ scheduled query/view로 대체하되, diff+apply 로직은 Spark 유지) | 로직 재사용, 사내 jar 활용 · Neptune 대체안 필요 |
-| **C. BQ 경유 두 단계** | 서비스 → BQ (Datastream) → 정산 Cloud SQL (reverse ETL, Composer+Python or Dataproc) | Datastream + Exporter 인프라 공유 · 지연 큼, 정합성 관리 복잡 |
+| **A. Spark lift (GKE Spark Operator)** | Spark 앱 그대로 유지 (Neptune snapshot은 BQ scheduled query/view로 대체하되, diff+apply 로직은 Spark 유지) | 로직 재사용, 사내 jar 활용 · Neptune 대체안 필요 |
+| **C. BQ 경유 두 단계** | 서비스 → BQ (CDC 수집) → 정산 Cloud SQL (reverse ETL, Composer+Python or Spark) | CDC + Exporter 인프라 공유 · 지연 큼, 정합성 관리 복잡 |
 
-Datastream은 BQ/GCS로만 랜딩하므로 **서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC는 불가**. 필요하면 Cloud SQL External Replica나 DMS 등 별도 도구 검토 필요.
+> ⚠️ **전제 변경 — 재검토 필요 (2026-09)**: 아래 판단은 Datastream 전제("BQ/GCS로만 랜딩 → 직접 CDC 불가")로 쓴 것. Datastream 기각 후 CDC는 Debezium → **Kafka** 경유라, Kafka consumer로 정산 Cloud SQL에 직접 싱크하는 선택지가 새로 생겼다. 직접 CDC 옵션을 다시 검토할 것.
+
+기존 판단(Datastream 전제): BQ/GCS로만 랜딩하므로 서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC는 불가 → Cloud SQL External Replica나 DMS 등 별도 도구 검토.
 
 **❓ 논의 필요**
 - 정산 시스템이 왜 마스터 데이터를 자기 DB에 두어야 하는지 (조직/보안/성능?)
 - Case B의 `_base` vs `_export` 소스가 뭘 계산하는지 (같은 DAG 다른 태스크 확인)
 - 정산 팀과 서비스 DB CDC 직접 replicate 협의 가능한지 (BQ 직접 read이든 Cloud SQL replica든)
-- Neptune의 Presto CTAS를 BQ view/scheduled query로 대체 시 스키마 안정성 (Datastream 랜딩 스키마 검증)
+- Neptune의 Presto CTAS를 BQ view/scheduled query로 대체 시 스키마 안정성 (BQ Sink 랜딩 스키마 검증 — 스키마 진화는 additive-only로 확정돼 안정성 우려는 상당 부분 해소)
 
 ### #6 DataFrameTransformer (trevi) 특수 케이스
 
@@ -361,10 +363,10 @@ Datastream은 BQ/GCS로만 랜딩하므로 **서비스 Cloud SQL → 정산 Clou
 
 | 옵션 | 방식 | 장단 |
 |---|---|---|
-| **A. Dataproc lift** | Spark 앱 그대로 유지 | 로직 검증됨, 로그 수집 인프라 공유 · 재작성 부담 없음 |
+| **A. Spark lift (GKE Spark Operator)** | Spark 앱 그대로 유지 | 로직 검증됨, Spark 런타임 확정으로 인프라 공유 · 재작성 부담 없음 |
 | **B. BQ SQL로 이식** | GCS JSON → BQ external table → SQL로 exclude/dedup/카테고리화 | 인프라 단순 · UDF/전처리 재작성 필요 |
 
-**옵션 A 권장** — 로그 수집이 Dataproc으로 갈 예정이라 인프라 공유 이점 큼.
+**옵션 A 권장** — spark-apps Spark 런타임이 GKE Spark Operator로 확정돼 인프라 공유 이점 큼.
 
 **❓ 논의 필요**
 - `page_trevi` 시스템 정체 (광고 리워드로 추정)
@@ -372,6 +374,7 @@ Datastream은 BQ/GCS로만 랜딩하므로 **서비스 Cloud SQL → 정산 Clou
 - JSON 원본에 `data.userInfo_age` 필드 존재 여부 (age 카테고리화 코드 트리거 여부)
 - PII exclude 목록의 policy owner (birth, ifa 외 추가 필요 컬럼)
 - 소스 JSON 생성 파이프라인의 GCP 이관 방향 (`page_trevi/raw/json/` 원본)
+- **로그 적재 트랙(`dp-spark-ingestion`, Kafka→BQ 직행 381개) 스코프에 trevi 원천이 포함되는지** — 포함되면 HDFS JSON 랜딩 자체가 사라져 이 json2parquet 앱은 lift 가 아니라 재설계/소멸 대상이 됨 (트랙 경계 확인 필요)
 
 ### #7 UnifySchemaMerger 특수 케이스
 
@@ -432,7 +435,7 @@ Airflow 옵션: `"trigger_rule":"all_failed"` — **정상 흐름에선 실행 �
 | 옵션 | 방식 | 장단 |
 |---|---|---|
 | **A. 폐기 (유력)** | upstream이 이관 제외라 fallback도 자연스레 사라짐 | 가장 단순 · upstream 대체 방안이 확정돼야 |
-| **B. Dataproc lift** | 스키마 통일 로직 자체가 GCP에서도 필요하면 그대로 유지 | Spark 코드 재사용 · fallback 시나리오 재현 필요 · 아마 안 쓸 것 |
+| **B. Spark lift (GKE Spark Operator)** | 스키마 통일 로직 자체가 GCP에서도 필요하면 그대로 유지 | Spark 코드 재사용 · fallback 시나리오 재현 필요 · 아마 안 쓸 것 |
 
 **폐기 유력** — upstream(`DataFrameMerger`)이 이관 제외로 결정된 시점에 이 fallback도 필요성이 사라짐. 다만 upstream 대체 방안이 확정되기 전까지는 존치.
 
@@ -440,7 +443,7 @@ Airflow 옵션: `"trigger_rule":"all_failed"` — **정상 흐름에선 실행 �
 - **실제 실행 빈도** — trigger_rule 특성상 얼마나 자주 트리거되는지 (거의 안 돌 가능성)
 - Tiara 로그의 스키마 다형성 원인 (여러 소스인지, 시간축 변화인지, 이관 시에도 재발 가능성)
 - `DataFrameMerger` 이관 제외 결정이 확정이면 → 이 앱도 자연 폐기
-- GCP 이관 시 로그 데이터 스키마 안정성 (Datastream 랜딩 스키마 관리 방식)
+- GCP 이관 시 로그 데이터 스키마 안정성 — Tiara 로그는 CDC(BQ Sink)가 아니라 **로그 적재 트랙(`dp-spark-ingestion`)** 경로. 그 설계(Spark 추론 + canonical 스키마 고정 + `allowFieldAddition`/`allowFieldRelaxation`)가 스키마 다형성 자체를 차단하므로, 이 fallback 의 존재 이유가 GCP 에서는 사라질 가능성이 큼
 
 ### #8 TicketUseRecord 특수 케이스
 
@@ -490,7 +493,7 @@ kp_export_ticket_use_record ETL (4 태스크: 결과를 export 형태로 다시 
 
 **B. 16 샤드 union**
 - for loop로 각 샤드 read → reduce union
-- Datastream으로 buydb 랜딩되면 이 union 자체가 불필요해질 수 있음
+- CDC 수집(BQ Sink)으로 buydb가 BQ 랜딩되면 이 union 자체가 불필요해질 수 있음
 
 **C. OLD_DB (buydb1) 코드 잔존 — dead code**
 - 8 샤드, `t_ticket_sales`, `pid → single_id`, `create_dt`
@@ -515,13 +518,13 @@ kp_export_ticket_use_record ETL (4 태스크: 결과를 export 형태로 다시 
 **이관 결정: 앱 폐기 + BQ SQL 재구현**
 
 - 로직 자체가 `union + filter + broadcast join` 단순 조합 → BQ SQL로 매우 자연스럽게 표현 가능
-- Datastream이 buydb → BQ 랜딩하면 **16 샤드 union도 자연 해소** (BQ landing이 단일 테이블)
+- CDC 수집이 buydb → BQ 랜딩하면 **16 샤드 union도 자연 해소** (BQ landing이 단일 테이블)
 - Neptune `ticket_buy_record`도 BQ view/scheduled query로 대체되면 소스 두 개 모두 BQ에 있음
 - **chain 전체가 어차피 재설계 대상** — `merge_and_move`가 이관 제외 결정된 시점에 5-스텝 chain 뒷부분이 사라지므로 앱만 lift하는 건 의미 없음
 - downstream `kp_export_ticket_use_record` 도 함께 BQ SQL로 통합 재구현하는 게 자연스러움
 
 **❓ 논의 필요**
-- **buydb CDC 이관 방향** — Datastream으로 BQ? 아니면 Hudi 유지? 이 결정이 앱 존폐 결정
+- **buydb CDC 이관 방향** — CDC 수집(BQ Sink)의 BQ 랜딩 롤아웃에 buydb가 언제 포함되는지 (수집 트랙 일정). 이 결정이 앱 존폐 결정
 - Neptune `ticket_buy_record` 이관 계획 (다른 Neptune 소스들과 함께)
 - **downstream `kp_export_ticket_use_record` ETL** — 이건 별도 export 파이프라인. 함께 이관 논의 필요
 - OLD_DB(buydb1) dead code 정리 가능 여부
@@ -583,7 +586,7 @@ kp_export_ticket_use_record ETL (4 태스크: 결과를 export 형태로 다시 
 
 **❓ 논의 필요**
 - **exclude prefix 재확인**: `t_series_product`, `t_publisher` 등이 왜 예외인지 (Neptune snapshot 소스라서 추정) → 이관 후 downstream 재설계에 따라 필요성 달라짐
-- Datastream 이관 후 GCS에 timestamp suffix 디렉토리 구조가 남는지 (남지 않을 것으로 예상)
+- CDC 수집(BQ Sink) 이관 후 GCS에 timestamp suffix 디렉토리 구조가 남는지 — 새 파이프라인은 BQ 직접 랜딩(GCS 경유 없음)이라 남지 않을 것으로 예상
 - 재업로드/backfill 시나리오 유무 (있으면 GCS Lifecycle mtime 기준으로는 대응 불가)
 - 이관 완료 전까지 앱 존치
 

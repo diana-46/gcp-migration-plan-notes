@@ -7,7 +7,7 @@ tags:
   - mysql
   - reverse-etl
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-08
 ---
 
 # MySqlDataFrameChangeApplier — 앱 상세
@@ -172,11 +172,11 @@ Kafka 를 안 쓰거나 A-0 이 막힐 때의 대안.
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | A-1. BQ 에서 diff + Composer/Python write | diff 를 BQ SQL 로, 결과만 Cloud SQL 에 반영 | 반영 대상이 변경분뿐이라 데이터량은 작다. **비교 기준을 "마지막 push 상태"로 바꾸면 drift 도 해소** |
-| A-2. Dataproc lift | Spark 그대로 | 사내 확장(`INSERT IGNORE`/`REPLACE INTO`) 재사용. **문제를 그대로 안고 감** |
+| A-2. Spark lift (GKE Spark Operator) | Spark 그대로 | 사내 확장(`INSERT IGNORE`/`REPLACE INTO`) 재사용. **문제를 그대로 안고 감** |
 | A-3. 정산 팀이 BQ 직접 read | 앱 자체 제거 | 가장 깔끔하나 **조직 협의 필요** (§4). 정산이 배치로만 읽으면 가능 |
 
-> Datastream 은 **BQ/GCS 로만 랜딩**한다. 서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC 는 불가하므로,
-> Kafka 를 안 쓰는 시나리오에서는 A-1/A-3 만 남는다.
+> ⚠️ (2026-09 갱신) 위 제약은 Datastream 전제("BQ/GCS 로만 랜딩 → 직접 CDC 불가")로 쓴 것.
+> Datastream 기각 후 확정된 CDC 는 Debezium → **Kafka** 경유라, Kafka 를 안 쓰는 시나리오 자체가 사실상 사라졌다 — A-0(Kafka 직결) 검토가 우선.
 
 ### Case B
 
@@ -189,8 +189,9 @@ Kafka 를 안 쓰거나 A-0 이 막힐 때의 대안.
 `INSERT IGNORE` / `REPLACE INTO` 는 MySQL 전용 문법이다.
 Cloud SQL for MySQL 을 유지하면 그대로 쓸 수 있고, 다른 DB 로 가면 `INSERT … ON DUPLICATE KEY UPDATE` 등으로 재표현해야 한다.
 
-> Datastream 은 BQ/GCS 로만 랜딩한다. **서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC 는 불가**하므로
-> 필요하면 Cloud SQL External Replica 나 DMS 를 별도 검토해야 한다.
+> ⚠️ (2026-09 갱신) "서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC 불가"는 Datastream 전제의 판단.
+> 확정된 CDC 는 Kafka 경유(Debezium → Kafka)라 Kafka consumer 로 정산 Cloud SQL 에 직접 싱크하는 경로가 가능해졌다.
+> Cloud SQL External Replica / DMS 검토는 그 경로가 막힐 때의 대안으로 순위가 내려간다.
 
 ## 6. ❓ 논의 필요
 
@@ -200,7 +201,7 @@ Cloud SQL for MySQL 을 유지하면 그대로 쓸 수 있고, 다른 DB 로 가
   → 이 답이 A-3(앱 제거) 가능 여부를 결정한다
 - 정산 팀이 **BQ 를 직접 read 할 수 있는지** (협의 가능 여부)
 - **스키마 drift 방어** — Neptune CTAS 의 명시적 CAST 를 CDC 직결에서 무엇으로 대체할지 (§5 A-0)
-- Neptune 의 Presto CTAS + 명시적 CAST 를 **BQ view 로 대체할 때 스키마 안정성** (Datastream 랜딩 스키마 검증)
+- Neptune 의 Presto CTAS + 명시적 CAST 를 **BQ view 로 대체할 때 스키마 안정성** (BQ Sink 랜딩 스키마 검증 — 스키마 진화 additive-only 확정으로 우려 상당 부분 해소)
 - Case B `_base` / `_export` 계산 로직 — Cloud SQL stored procedure 로 옮길 수 있는지
 - Cloud SQL for MySQL 유지 여부 (`INSERT IGNORE` / `REPLACE INTO` 호환성)
 - 구세대 hidden 액션 4건(8310~8313) 정리 가능 여부 (§3)

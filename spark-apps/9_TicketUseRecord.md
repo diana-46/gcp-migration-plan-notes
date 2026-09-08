@@ -7,7 +7,7 @@ tags:
   - hudi
   - buydb
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # TicketUseRecord — 앱 상세
@@ -202,10 +202,10 @@ BQ 로 옮기면 파티션 프루닝·클러스터링으로 개선 여지가 크
 
 | 옵션 | 방식 | 평가 |
 |---|---|---|
-| **A. BQ SQL 재구현 + 스캔 구조 재설계** | Datastream 이 buydb → BQ 랜딩 후 SQL 로 조인. `ticket_buy_record` 를 `ticket_uid` 클러스터링 | **유력.** 로직이 `union + filter + inner join` 뿐이고 **원래 Presto SQL 이었다**(§4). 16 샤드 union 도 BQ 랜딩이 단일 테이블이면 자연 해소 |
-| B. Dataproc lift | Spark 그대로 | Hudi 를 계속 쓸 경우. 단 **부하 문제를 그대로 안고 간다** |
+| **A. BQ SQL 재구현 + 스캔 구조 재설계** | CDC 수집(BQ Sink)이 buydb → BQ 랜딩 후 SQL 로 조인. `ticket_buy_record` 를 `ticket_uid` 클러스터링 | **유력.** 로직이 `union + filter + inner join` 뿐이고 **원래 Presto SQL 이었다**(§4). 16 샤드 union 도 BQ 랜딩이 단일 테이블이면 자연 해소 |
+| B. Spark lift (GKE Spark Operator) | Spark 그대로 | Hudi 를 계속 쓸 경우. 단 **부하 문제를 그대로 안고 간다** |
 
-**전제 조건: buydb 의 CDC 이관 방향.** Datastream → BQ 로 가면 A, Hudi 유지면 B.
+**전제 조건: buydb 의 CDC 이관 방향.** CDC 수집(BQ Sink) → BQ 로 가면 A, Hudi 유지면 B.
 
 > **A 로 가더라도 "SQL 만 옮기면 끝"이 아니다.**
 > Presto 를 떠난 이유가 부하였고 그 원인(매시간 누적 풀스캔)이 코드에 그대로 있다(§4).
@@ -217,7 +217,7 @@ BQ 로 옮기면 파티션 프루닝·클러스터링으로 개선 여지가 크
 
 ## 7. ❓ 논의 필요
 
-- **buydb CDC 이관 방향** (Datastream → BQ vs Hudi 유지) — 이 앱 존폐를 좌우한다
+- **buydb CDC 이관 방향** (CDC 수집으로 BQ 랜딩 vs Hudi 유지 — 수집 트랙 롤아웃 일정) — 이 앱 존폐를 좌우한다
 - ~~Presto → Spark 전환 사유~~ → **Presto 부하** 로 확인됨 (§4)
 - **`ticket_buy_record` 의 규모** — 매시간 풀스캔 대상. BQ 스캔 비용 추산에 필요
 - **매시간 주기가 필수인지** — 일 1회로 낮출 수 있으면 스캔 비용이 24분의 1이 된다

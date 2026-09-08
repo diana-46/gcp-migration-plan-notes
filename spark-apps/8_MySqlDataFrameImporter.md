@@ -7,7 +7,7 @@ tags:
   - mysql
   - cdc
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # MySqlDataFrameImporter — 앱 상세
@@ -103,7 +103,7 @@ JdbcDialects.registerDialect(KakaoPageMySQLDialect)
 ```
 
 Spark 기본 `MySQLDialect` 를 제거하고 사내 dialect 를 등록한다.
-**이관 시 `BIT(n)` 컬럼의 타입 매핑이 달라질 수 있다** — Datastream/BQ 로 옮길 때 검증 필요.
+**이관 시 `BIT(n)` 컬럼의 타입 매핑이 달라질 수 있다** — CDC 수집(Debezium)/BQ 로 옮길 때 검증 필요.
 
 ### 파티셔닝
 
@@ -157,9 +157,11 @@ Debezium → Hudi 파이프라인이 그 변경량을 따라가지 못해 **일 
 
 > ⚠️ **다만 GCP 에서는 재검증할 여지가 있다.**
 > `t_waitfree_user` 를 배치로 남긴 판단은 **Hudi 의 수집 성능 한계**에 대한 것이지
-> CDC 자체에 대한 것이 아니다. GCP 의 CDC 타겟은 Hudi 가 아니라 **Datastream → BigQuery** 이고,
+> CDC 자체에 대한 것이 아니다. GCP 의 CDC 타겟은 Hudi 가 아니라 **Debezium → Kafka → BQ Sink → BigQuery** 이고,
 > BQ 는 고빈도 변경 테이블에 대해 Hudi 와 다른 병합 메커니즘을 쓴다.
 > **당시 제약이 새 스택에서도 유효한지는 별도 확인이 필요하다** — 자동으로 승계할 판단이 아니다.
+> (참고: 수집 트랙의 반영방식 4갈래 판정에서 `t_waitfree_user`·`view_history_meta` 는
+> **④ 하루 1회 배치 덤프 유지**로 분류돼 있다 — "기존 처리 유지, merge 비용 $0" 갈래. 즉 수집 트랙 판정도 배치 유지 쪽.)
 
 ## 5. 이관 방향
 
@@ -169,8 +171,8 @@ Debezium → Hudi 파이프라인이 그 변경량을 따라가지 못해 **일 
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | **A. `gcloud sql export csv`** | Cloud SQL → GCS CSV → BQ 로드 | **유력.** Spark 불필요. [[6_AgeGenderCategorizingImporter]] 와 같은 패턴. 샤드별 태스크로 나누면 현행 구조(샤드별 pool)와 그대로 대응 |
-| B. Dataproc lift | Spark 그대로 | 커스텀 dialect·파티셔닝 로직을 그대로 재사용. 규모가 크면 유리 |
-| ~~C. Datastream (CDC)~~ | — | **§4 에서 배제됨.** 단 Hudi → BQ 로 타겟이 바뀌므로 재검증 여지는 있음 |
+| B. Spark lift (GKE Spark Operator) | Spark 그대로 | 커스텀 dialect·파티셔닝 로직을 그대로 재사용. 규모가 크면 유리 |
+| ~~C. CDC 수집 (Debezium → BQ Sink)~~ | — | **§4 에서 배제됨.** 단 Hudi → BQ 로 타겟이 바뀌므로 재검증 여지는 있음 (수집 트랙 4갈래 판정은 ④ 배치 덤프 유지) |
 
 A 와 B 의 갈림길은 **`view_history_meta` 의 규모**다.
 행 수·소요 시간을 재보면 [[6_AgeGenderCategorizingImporter]] 때와 같은 방식으로 판단할 수 있다.
@@ -181,7 +183,7 @@ A 와 B 의 갈림길은 **`view_history_meta` 의 규모**다.
 | 2 | **8 샤드 병합 후속 처리** | `--create-hive-table false` + `hdfs_mkdir` 로 한 디렉토리에 모은다. BQ 에서는 와일드카드 로드로 통합 가능한지 |
 | 3 | **`BIT(n)` 컬럼 존재 여부** | 커스텀 dialect (KS-7008) 대상. `gcloud sql export csv` 의 CSV 직렬화에서 어떻게 나오는지 확인 필요 |
 | 4 | **샤드별 pool 대체** | `mysql_userinven01_large`~`08_large` 로 소스 DB 별 동시성을 제어 중. GCP 에서 동등한 보호책 |
-| 5 | **`t_waitfree_user` 변경량 재측정** | Datastream + BQ 에서도 여전히 부담인지 (§4 의 재검증 항목) |
+| 5 | **`t_waitfree_user` 변경량 재측정** | CDC 수집 + BQ 에서도 여전히 부담인지 (§4 의 재검증 항목) |
 
 ## 6. ❓ 논의 필요
 
@@ -191,13 +193,13 @@ A 와 B 의 갈림길은 **`view_history_meta` 의 규모**다.
   이동하면서 Hive 뷰명이 바뀌는 것을 막으려고 prefix 를 뺀 것으로 보임 (§7)
 
 **남은 것**
-- **`view_history_meta` 행 수 / 현행 소요 시간** — A(export) vs B(Dataproc) 판단 근거
+- **`view_history_meta` 행 수 / 현행 소요 시간** — A(export) vs B(Spark) 판단 근거
 - `userinven` 샤드 구조가 GCP 에서도 유지되는지 (Cloud SQL 샤드 그대로 vs 통합)
 - `view_history_meta` / `v_t_waitfree_user` **소비처** — 둘 다 athlon 안에서 읽는 액션이 없다
 - `--max-records-per-partition 200000` 의 근거 (row 크기? 메모리?)
 - 샤드별 pool 을 GCP 에서 어떤 형태로 대체할지
 - 커스텀 dialect 대상 `BIT` 컬럼이 실제로 있는지
-- **`t_waitfree_user` 를 Datastream + BQ 로 재검증할지** — 당시 제약은 Hudi 성능이었다 (§4)
+- **`t_waitfree_user` 를 CDC 수집 + BQ 로 재검증할지** — 당시 제약은 Hudi 성능이었다 (§4). 수집 트랙 판정(④ 배치 덤프 유지)을 뒤집을 근거가 있는지부터 확인
 
 ## 7. `t_waitfree_user` 이력
 

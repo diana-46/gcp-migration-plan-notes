@@ -151,7 +151,7 @@ df.filter(!col(KAGE_COL).contains(USER_UID))        // 헤더 줄 제거
 |---|---|---|
 | ① | **UDF 안에서 Kage HTTP GET** | 재시도·타임아웃 처리 없음 |
 | ② | **Kage 는 카카오 서비스 — 이관 대상 아님** | **GCP → 사내망 연결(Interconnect/VPN) 가능 여부에 종속.** `[[2_Cloud Composer vs Self-managed 비교]]` 미해결 질문 #2 |
-| ③ | 소스가 Hudi (`t_push_group`) | Datastream + BQ 전환에 종속 |
+| ③ | 소스가 Hudi (`t_push_group`) | CDC 수집(BQ Sink) + BQ 전환에 종속 |
 | ④ | 파티션 `push_group_uid` 고카디널리티 | BQ 4,000 제한 → 클러스터링 |
 
 형제 앱([[7_PushTargetUserImporter]])의 `ATHLON` 경로는 athlon 산출물이 GCS 로 가면서 해소됐지만,
@@ -163,7 +163,7 @@ df.filter(!col(KAGE_COL).contains(USER_UID))        // 헤더 줄 제거
 >
 > | 옵션 | fetch 실행 주체 | 사내망 egress 필요 대상 |
 > |---|---|---|
-> | Dataproc lift | Dataproc worker | **Dataproc** |
+> | Spark lift (GKE Spark Operator) | Spark executor (GKE Pod) | **GKE (Spark 노드풀)** |
 > | Composer + Python | Composer worker | **Composer** |
 >
 > 따라서 인프라에 물을 때는 "GCP 에서 사내망 되나요"가 아니라
@@ -174,7 +174,7 @@ df.filter(!col(KAGE_COL).contains(USER_UID))        // 헤더 줄 제거
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | **A. Composer + Python** | Kage HTTP fetch·CSV 파싱을 Python 으로, 결과만 BQ 적재 | **유력.** 연산이 "파일 받아 첫 컬럼 뽑기"뿐. 이미 `client` 모드 3 executor 라 규모가 작아 보인다 |
-| B. Dataproc lift | Spark 그대로 | 변경 최소 |
+| B. Spark lift (GKE Spark Operator) | Spark 그대로 | 변경 최소 |
 | C. BQ SQL | — | **불가.** 외부 HTTP fetch 불가 |
 
 **형제 앱과 함께 설계해야 한다.** 둘이 같은 테이블을 읽고 같은 파티션에 쓰므로,
@@ -197,12 +197,12 @@ df.filter(!col(KAGE_COL).contains(USER_UID))        // 헤더 줄 제거
 ## 7. ❓ 논의 필요
 
 - **GCP → 사내망 Kage 연결** — Kage 는 이관 대상이 아니므로 "닿을 수 있는지"가 문제.
-  **어느 컴포넌트(Dataproc / Composer)에서 닿는지**까지 물어야 한다 (§5)
+  **어느 컴포넌트(GKE Spark 노드풀 / Composer)에서 닿는지**까지 물어야 한다 (§5)
 - **`send_status` 를 안 거르는 것이 의도인지** (§2) — 형제 앱은 `SUCCESS` 만 본다
 - 형제 앱과 **같은 파티션 공간을 공유하는 것이 의도인지** (§4)
 - **두 앱을 하나로 합칠 수 있는지** (§5)
 - `deploy-mode client` 인 이유 (§6)
-- 시간별 처리 규모 — Composer+Python(A) vs Dataproc(B) 판단 근거
+- 시간별 처리 규모 — Composer+Python(A) vs Spark lift(B) 판단 근거
 - `push_user_v2` 최종 소비처 (형제 앱 문서와 공통 항목)
 
 ## 재현

@@ -563,8 +563,8 @@ models:
 
 - Loupe 서비스 GCP 목적지
 - Bronze 소스 이관 전략 (BigLake vs 관리형)
-- Airflow → Cloud Composer? Spark → Dataproc?
-- 파티션 표준 (`DATE`/`DATETIME` KST-벽시계) 최종 승인
+- Airflow → Cloud Composer? Spark → ~~Dataproc?~~ **GKE Spark Operator 확정** (spark-apps 기준)
+- 파티션 표준 (`DATE`/`DATETIME` KST-벽시계) 최종 승인 — ⚠️ 수집(landing) 층 확정과 정합 확인 필요: CDC 는 `TIMESTAMP`(UTC) + KST `DATE` 파생 컬럼(DATETIME 안 만듦), 로그 적재는 `DATE`(필요시 TIMESTAMP). dbt 가공층이 `DATETIME` KST-벽시계로 가면 층간 타입이 갈라짐
 
 ### Phase 1 — 공통 기반 (1-2주)
 
@@ -631,7 +631,7 @@ BQ 이관은 단순 엔진 교체가 아니라 **부채 회복**임을 팀에 �
 | 1 | Loupe 서비스 GCP 목적지 (MongoDB 유지 / BQ 직접 서빙 / 다른 저장소) | musicdata Gold/API 마트 설계 결정 |
 | 2 | Bronze 소스 전략 — BigLake 외부 테이블 vs BQ 관리형 로드 | S3 존치 부분과 이관 부분 경계 |
 | 3 | Airflow → Cloud Composer 이관 방식 | 스케줄링·백필 오케스트레이션 |
-| 4 | Spark(Loupe export) → Dataproc? Dataflow? | 파이프라인 재설계 범위 |
+| 4 | Spark(Loupe export) → GKE Spark Operator (spark-apps 런타임 확정 기준) — Dataflow 대안 여부만 잔여 | 파이프라인 재설계 범위 |
 | 5 | `music-dbt-utils` — Presto/BQ dispatch vs 브랜치 분리 | dual-run 기간 정책에 따라 |
 | 6 | dual-run 기간 유무 (Presto·BQ 병렬 운영) | 매크로 호환성 전략 결정 |
 | 7 | `timestamp` 표준 — `TIMESTAMP`(UTC) vs `DATETIME`(KST) 통일 여부 | 컬럼 명명 규약 완성 |

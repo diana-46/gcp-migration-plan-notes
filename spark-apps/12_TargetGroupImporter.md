@@ -7,7 +7,7 @@ tags:
   - hudi
   - kage
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-08
 ---
 
 # TargetGroupImporter — 앱 상세
@@ -138,7 +138,7 @@ CRM/타겟팅 시스템이나 애드혹 분석에서 직접 쿼리하는 것으�
 |---|---|---|
 | ① | **Spark UDF 안에서 Kage HTTP GET** | executor egress. 재시도·타임아웃 없음 |
 | ② | **Kage 는 카카오 서비스 — 이관 대상 아님** | **GCP → 사내망 연결(Interconnect/VPN) 가능 여부에 종속.** `[[2_Cloud Composer vs Self-managed 비교]]` 미해결 질문 #2 |
-| ③ | 소스가 Hudi (`t_target_group`) | Datastream + BQ 전환에 종속 |
+| ③ | 소스가 Hudi (`t_target_group`) | CDC 수집(BQ Sink) + BQ 전환에 종속 |
 | ④ | 파티션 `target_group_uid` 고카디널리티 | BQ 파티션 4,000 제한 → **클러스터링 전환** 필요 |
 
 ④ 는 형제 앱보다는 나을 수 있다 — 파티션이 1단(`target_group_uid`)이고,
@@ -149,7 +149,7 @@ CRM/타겟팅 시스템이나 애드혹 분석에서 직접 쿼리하는 것으�
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | **A. Composer + Python** | Kage HTTP fetch → user_uid 파싱 → BQ 적재 | **유력.** 연산이 "파일 받아 숫자로 캐스팅"뿐. `client 3 4g` 규모라 작다 |
-| B. Dataproc lift | Spark 그대로 | 변경 최소 |
+| B. Spark lift (GKE Spark Operator) | Spark 그대로 | 변경 최소 |
 | C. BQ SQL | — | **불가.** 외부 HTTP fetch 불가 |
 
 > **kage 2종 + push 1종을 묶어서 설계하는 편이 낫다.**

@@ -7,7 +7,7 @@ tags:
   - 이관
 status: verified
 created: 2026-08-13
-updated: 2026-08-13
+updated: 2026-09-08
 ---
 
 # spark-apps 런타임 버전 결정
@@ -50,7 +50,7 @@ updated: 2026-08-13
 |---|---|
 | 코드 패턴 (JavaConverters 3, filterKeys 1, TraversableOnce 1, Stream 4) | 기계적 수정, 소규모 |
 | **`mongo-spark-connector 2.4.3`** | 2.13 빌드는 **10.x 계열만** 존재. `ReadConfig`/`WriteConfig`/implicit 확장이 전부 삭제돼 3~5개 파일 재작성 필요 |
-| 그 Mongo 앱들 | Datastream(CDC) 대체 대상 → 지금 재작성하면 버릴 코드에 비용 |
+| 그 Mongo 앱들 | CDC 수집(Debezium → BQ Sink) 대체 대상 → 지금 재작성하면 버릴 코드에 비용 |
 | 공식 이미지 | 3.5.8 은 scala2.13 태그가 없다 → 2.13 은 베이스 배포본부터 직접 조달해야 한다 |
 
 즉 **2.13 이 오히려 이미지 조달도 번거롭다.** Mongo 앱이 정리되는 시점(또는 Spark 4 전환 시점)에 옮기면 되고, 이미지가 잡별로 독립이라 **앱 단위 순차 전환**이 가능하다.

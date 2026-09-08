@@ -26,6 +26,7 @@ neptune-to-dbt 스킬의 변환표(`references/presto-to-bq.md`)에 있는 케�
 | [2](함정케이스%20검증/2_요일%20번호.md) | 함정 | 요일 번호 | presto 1=월 vs BQ 1=일. 동치식 `MOD(EXTRACT(DAYOFWEEK FROM d)+5, 7)+1` |
 | [3](함정케이스%20검증/3_주%20시작.md) | 함정 | 주 시작 | BQ `WEEK` 기본은 일요일 시작 — 항상 `WEEK(MONDAY)` 명시 |
 | [4](함정케이스%20검증/4_substr%20인덱스.md) | 함정 | substr 인덱스 0 | 음수·양수는 동일. 0 만 다름 — presto `''` vs BQ 전체 문자열 |
+| [5](함정케이스%20검증/5_tiara%20로그%20timestamp·파티션%20경계.md) | 함정 | tiara 로그 timestamp·경계 | 9h 밀림 없음 — 레이크부터 UTC instant, 행수까지 일치. 경계는 서비스가 아니라 파티션 컬럼 출처 (로그 collect_date = KST) |
 | [f1](함수매핑%20검증/1_시간·타임존%20세트.md) | 함수매핑 | 시간·타임존 세트 | UTC 세션 기준 전부 동치 (AT TIME ZONE≡DATETIME, DATE_DIFF 순서 반대, unixtime 왕복) |
 | [f2](함수매핑%20검증/2_집계%20함수%20세트.md) | 함수매핑 | 집계 함수 세트 | 4종 동치 (approx 계열은 대규모에서 오차 허용 비교) |
 | [f3](함수매핑%20검증/3_배열·문자열·식별자%20세트.md) | 함수매핑 | 배열·문자열·식별자 세트 | 7종 동치 (음수 인덱스 대체식 포함). MAP 은 STRUCT ARRAY 재설계 확정 |

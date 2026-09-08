@@ -6,7 +6,7 @@ tags:
   - gcp이관
   - mongodb
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # MongoDataFrameImporter — 앱 상세
@@ -168,8 +168,8 @@ MongoDataFrameImporter (37)
 
 ### 소스 (MongoDB)
 
-- `stat`, `contents` 두 클러스터. Datastream 은 MongoDB 소스를 지원하지만
-  **컬렉션명이 매월 바뀌는 B 케이스는 CDC 로 자연스럽게 표현되지 않는다.**
+- `stat`, `contents` 두 클러스터. CDC 수집(Debezium MongoDB — Datastream 기각으로 확정된 캡처 도구)은 MongoDB 소스를 지원하지만
+  **컬렉션명이 매월 바뀌는 B 케이스는 CDC 로 자연스럽게 표현되지 않는다.** (⚠️ 이 판단은 Datastream 기준으로 쓴 것 — Debezium 기준으로 재확인 필요. 컬렉션 단위 캡처 설정이라는 구조는 같아서 결론이 유지될 가능성이 높다.)
 - A 는 매일 전체 스냅샷 → CDC 로 옮기면 효율이 크게 오른다.
 
 ### 대상 (Hive → BigQuery)

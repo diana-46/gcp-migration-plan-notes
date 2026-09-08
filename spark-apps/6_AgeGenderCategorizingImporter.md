@@ -7,7 +7,7 @@ tags:
   - mysql
   - pii
 created: 2026-08-31
-updated: 2026-08-31
+updated: 2026-09-08
 ---
 
 # AgeGenderCategorizingImporter — 앱 상세
@@ -152,7 +152,7 @@ gcloud sql export csv prod-kakaowebtoon-episode01-kor-cloudsql-my4 \
    raw `birthday` / `gender` 가 인스턴스 밖으로 나가지 않는다.
    지금은 Spark executor 로 raw 값을 JDBC 로 끌어온 뒤 변환한다.
 3. **주 1회 배치** — 단일 스레드 export 의 속도 부담이 작다.
-4. **Spark 클러스터 의존 제거** — Dataproc 없이 Composer + `BashOperator` 만으로 된다.
+4. **Spark 클러스터 의존 제거** — Spark 런타임(GKE Spark Operator) 없이 Composer + `BashOperator` 만으로 된다.
 
 ### 예상 형태
 
@@ -211,9 +211,9 @@ BQ 는 목적지일 뿐이다. `EXTERNAL_QUERY`(BQ federated) 를 쓰더라도 B
 | 옵션 | 방식 | 평가 |
 |---|---|---|
 | **A. `gcloud sql export csv`** (팀장님 제안) | Cloud SQL 에서 쿼리 실행 → GCS CSV → BQ | **유력.** SQL 그대로 재사용, PII 가 DB 밖으로 안 나감, Spark 불필요 |
-| B. Datastream + BQ 에서 범주화 | raw 를 BQ 에 랜딩 후 BQ SQL 로 변환 | **PII 정책상 불가 가능성** — raw birthday 가 BQ 에 남는다 |
+| B. CDC 수집(Debezium → BQ Sink) + BQ 에서 범주화 | raw 를 BQ 에 랜딩 후 BQ SQL 로 변환 | **PII 정책상 불가 가능성** — raw birthday 가 BQ 에 남는다 |
 | C. 소스 DB 에 view 생성 후 CDC | 범주화된 view 만 CDC 대상으로 | 가능하지만 소스 DB 변경 협의 필요 |
-| D. Dataproc lift | Spark 그대로 | 로직이 SQL 뿐이라 Spark 을 쓸 이유가 약함 |
+| D. Spark lift (GKE Spark Operator) | Spark 그대로 | 로직이 SQL 뿐이라 Spark 을 쓸 이유가 약함 |
 
 **A 가 가장 자연스럽다.** B 는 §4 의 PII 가설이 맞다면 애초에 선택지가 아니다.
 
@@ -222,7 +222,7 @@ BQ 는 목적지일 뿐이다. `EXTERNAL_QUERY`(BQ federated) 를 쓰더라도 B
 - §4 의 **PII 가설이 맞는지** — 맞다면 이관 방향이 A 로 사실상 고정된다
 - 개인정보 정책 owner 가 어디인지
 - `/team/kakaopage_c1/categorized_age_gender/` **소비처** (어느 팀이 읽는지)
-- `user_private_info` 가 Datastream/CDC 대상에 포함돼 있는지
+- `user_private_info` 가 CDC 수집 대상에 포함돼 있는지
 - `old` / `new` 쿼리 잔재 폐기 가능 여부 (현행은 `new_global` 만 사용)
 - `t_user` 규모 → `gcloud sql export` 단일 실행으로 감당 가능한지
 - 나이 구간 로직의 **소유자** — 이 범주 정의를 바꿀 수 있는 주체가 누구인지 (BQ 로 옮기면 수정이 쉬워진다)
