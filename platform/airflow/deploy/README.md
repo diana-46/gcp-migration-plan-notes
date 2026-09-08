@@ -22,4 +22,4 @@
 ## 관련 자료
 
 - GitHub: `kakaoent/dp-airflow-provider`
-- 관련 폴더: [[../airflow/7_3_공통 Custom Operator 제공 방안|스케줄러/7_3_공통 Custom Operator 제공 방안]]
+- 관련 폴더: [[../7_3_공통 Custom Operator 제공 방안|스케줄러/7_3_공통 Custom Operator 제공 방안]]

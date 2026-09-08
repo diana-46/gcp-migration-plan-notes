@@ -1,0 +1,23 @@
+name: Vault Lint
+
+# push 마다 wiki-manifest 계약 위반을 기계 검사한다:
+# 이미지 유입/임베드 · status 어휘(wip|draft|final|archived) · wip/final 신호 모순 · 깨진 wikilink
+# 내용 차원의 검사(기존 노트와의 충돌, 압축·합병 후보)는 푸시 전에 로컬에서 /vault-review 로 수행.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run vault lint
+        run: python3 .github/scripts/vault_lint.py

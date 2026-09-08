@@ -294,7 +294,7 @@ gcloud composer environments snapshots load <env-name>-rollback \
 
 - [[../7_1_실제 스펙 산정]] — 운영 비용 / SLA 산정
 - [[02_dag_deployment]] — DAG bucket 동기화 패턴
-- [[06_iam_workspace_rbac]] (필요 시) — RBAC snapshot 포함 여부
+- 06_iam_workspace_rbac (PoC 미생성, 필요 시) — RBAC snapshot 포함 여부
 - [[../8_Composer 권한 및 인증]] — 사용자 / Role 복구 영향
 
 ## 참고

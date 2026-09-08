@@ -1,14 +1,8 @@
 name: Sync Markdown to Confluence
 
+# 2026-09-08: push 트리거 비활성화 — CONFLUENCE_BASE_URL secret 미설정으로 동작한 적 없고,
+# 팀 위키 체계(confirmed → Confluence 보고)가 역할을 대체. 필요 시 수동 실행만 가능.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**/*.md'
-      - '.github/workflows/sync-to-confluence.yml'
-      - '.github/scripts/sync_to_confluence.py'
-      - '.github/confluence-mapping.json'
   workflow_dispatch:
     inputs:
       full_sync:

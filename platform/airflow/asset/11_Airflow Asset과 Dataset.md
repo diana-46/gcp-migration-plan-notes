@@ -240,7 +240,7 @@ daily_summary_alias = AssetAlias("daily_user_summary")
 
 ## 우리 Asset-Centric 디자인과의 매핑
 
-[[../athlon/4_Asset-Centric 아키텍처 안]] 의 4개 엔티티가 Airflow 3 Asset 과 1:1 매핑:
+[[../../athlon/4_Asset-Centric 아키텍처 안]] 의 4개 엔티티가 Airflow 3 Asset 과 1:1 매핑:
 
 | 우리 모델 | Airflow 3 |
 |---|---|
@@ -280,7 +280,7 @@ daily_summary_alias = AssetAlias("daily_user_summary")
 - [ ] Composer 3 sandbox 에서 PubSubMessageTrigger 동작
 - [ ] DataHub URN ↔ Airflow Asset URI 자동 stitching 검증
 
-상세 PoC: [[../athlon/PoC/README]] Step 1
+상세 PoC: [[../../athlon/PoC/README]] Step 1
 
 ## 미확정 / 확인 필요
 
@@ -292,5 +292,5 @@ daily_summary_alias = AssetAlias("daily_user_summary")
 
 - [[1_개요]] — 스케줄러 메인 결정
 - [[6_Airflow 2 vs 3 비교]] — 버전 결정 (Asset 도 신규 기능 중 하나로 언급됨)
-- [[../athlon/4_Asset-Centric 아키텍처 안]] — Asset 위에 올라타는 우리 디자인
-- [[../athlon/PoC/README]] — Asset 직접 만져보기
+- [[../../athlon/4_Asset-Centric 아키텍처 안]] — Asset 위에 올라타는 우리 디자인
+- [[../../athlon/PoC/README]] — Asset 직접 만져보기

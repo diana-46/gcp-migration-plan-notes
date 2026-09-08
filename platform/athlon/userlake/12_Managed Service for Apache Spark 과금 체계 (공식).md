@@ -220,7 +220,7 @@ Interactive:  12 × 24 × $0.089 + 25 × ($0.040/30) = $25.66 (1일)
 
 → Interactive 가 Standard 보다 **48% 비쌈** (비율은 region 무관).
 
-> **우리 워크로드 기반 실제 비용 계산** (Baseline vs Downsize, Serverless 포함 전체 시나리오): → [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+> **우리 워크로드 기반 실제 비용 계산** (Baseline vs Downsize, Serverless 포함 전체 시나리오): → [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 
 ### 1-5. Workload 사용량 확인
 
@@ -304,7 +304,7 @@ Management fee = 20 vCPU × $7.30 / 월        = $146 / 월
 + (선택) Lightning Engine = 20 vCPU × $1.825 = $36.50 / 월
 ```
 
-> **우리 워크로드 기반 실제 비용 계산** (Baseline vs Downsize, Cluster/GKE 시나리오): → [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+> **우리 워크로드 기반 실제 비용 계산** (Baseline vs Downsize, Cluster/GKE 시나리오): → [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 
 ### 2-6. Clusters 추가 과금 시나리오
 

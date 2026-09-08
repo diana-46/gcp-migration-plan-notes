@@ -15,7 +15,7 @@ revised: 2026-07-02
 > Serverless 는 Interactive 강제 Premium 으로 3~4배 비쌈 → 부적합.
 
 > **관련 문서**:
-> - 상세 비용 계산 (Baseline vs Downsize): [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+> - 상세 비용 계산 (Baseline vs Downsize): [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 > - 다운사이즈 Spark 설정: [[13_Spark Connect 다운사이즈 결정 (실측 기반)]]
 > - 단가 근거: [[12_Managed Service for Apache Spark 과금 체계 (공식)]]
 > - 사용량 근거: [[11_사용량 분석 (한달 데이터 기반)]]
@@ -111,7 +111,7 @@ revised: 2026-07-02
 → GKE vs Cluster on GCE **VM 가격 100% 동일**. 차이는 **Dataproc fee** 만.
 → Serverless 는 완전 다른 과금 (DCU) → 우리 워크로드에서 훨씬 비쌈.
 
-**상세 시나리오 비용**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 8
+**상세 시나리오 비용**: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]] § 8
 
 ---
 
@@ -215,12 +215,12 @@ revised: 2026-07-02
 - init action 으로 spark-connect 서버 셋업 부담 감수
 - ⚠ Master/Worker 동일 spec 강제 — Master 도 hm-8 되어 memory 낭비
 
-→ **팀 결정 필요**: 비용 절감 (연 \$1,536~\$4,152) vs 매니지드 도구 자동 제공 tradeoff. 상세 결정 매트릭스: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)#10 배포 모드 결정 매트릭스]]
+→ **팀 결정 필요**: 비용 절감 (연 \$1,536~\$4,152) vs 매니지드 도구 자동 제공 tradeoff. 상세 결정 매트릭스: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)#10 배포 모드 결정 매트릭스]]
 
 **Serverless 는 왜 부적합**:
 - Interactive session 강제 Premium → 24/7 상시 워크로드에서 \$2,040~\$6,938/월 (다운사이즈~현재)
 - 같은 스펙 Cluster/GKE 대비 3배 이상
-- 상세 계산: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 7
+- 상세 계산: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]] § 7
 
 ### 6-3. Phase 별 실행
 
@@ -231,13 +231,13 @@ revised: 2026-07-02
 | **Phase 2+1주** | 동일 | Res CUD 3Y 약정 → 월 **\$917** 확정 |
 | **Phase 3** (선택) | 동일 | Spot pool → 월 ~\$776 / Driver 증설 검토 |
 
-**비용 상세**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]] § 9
+**비용 상세**: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]] § 9
 
 ---
 
 ## 7. 참고
 
-- **비용 계산 상세**: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+- **비용 계산 상세**: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 - **다운사이즈 Spark 설정**: [[13_Spark Connect 다운사이즈 결정 (실측 기반)]]
 - **단가 근거**: [[12_Managed Service for Apache Spark 과금 체계 (공식)]]
 - **사용량 근거**: [[11_사용량 분석 (한달 데이터 기반)]]

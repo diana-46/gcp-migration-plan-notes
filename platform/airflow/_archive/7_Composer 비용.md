@@ -156,7 +156,7 @@ Composer 3는 컴포넌트별 vCPU·메모리·시간 단위 과금이지만 **0
 - [ ] Self-managed PoC: GKE 클러스터 견적 (n2 vs n2d, on-demand vs spot 혼합)
 - [ ] Spot 노드 적용 시 task 재시도율 측정 (Spot preemption 영향)
 - [ ] CUD 약정 가능한 compute 사양 미리 산정
-- [ ] BigQuery 쿼리 비용은 별도 (Userlake에서 발생 — [[../athlon/1_개요]])
+- [ ] BigQuery 쿼리 비용은 별도 (Userlake에서 발생 — [[../../athlon/1_개요]])
 
 ## 미확정 / 확인 필요
 

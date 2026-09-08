@@ -14,7 +14,7 @@ created: 2026-07-02
 >
 > **부가 발견**: Queue wait 평균 2시간 vs 실행 7초 = 1000:1. 병목은 executor 가 아닌 상위 스케줄링 (다운사이즈 안전 강화).
 >
-> **비용 영향** (GKE 직접, Res CUD 3Y): 월 **\$1,395 → \$917** (**-34%**). 상세: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+> **비용 영향** (GKE 직접, Res CUD 3Y): 월 **\$1,395 → \$917** (**-34%**). 상세: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 
 ---
 
@@ -433,7 +433,7 @@ container_memory_working_set_bytes{namespace="athlon-prod", pod=~"spark-connect-
 ## 3. 노드 선택 & 비용
 
 **노드 후보 비교 · K8s 시스템 overhead 고려 · 대안 · 상세 비용 breakdown**:
-→ [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+→ [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 
 **결론 요약** (배포 모드별 상이):
 
@@ -444,7 +444,7 @@ container_memory_working_set_bytes{namespace="athlon-prod", pod=~"spark-connect-
 
 ---
 
-## 4. 위험 &amp; 완화
+## 4. 위험 & 완화
 
 
 | 위험                                    | 심각도 | 완화                                                        |
@@ -465,7 +465,7 @@ container_memory_working_set_bytes{namespace="athlon-prod", pod=~"spark-connect-
 ## 5. 비용 영향
 
 **상세 비용 breakdown · 시나리오 매트릭스 · 연간 절감 · CUD 결정**:
-→ [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)]]
+→ [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)]]
 
 **요약** (Res CUD 3Y 기준, 다운사이즈 후):
 
@@ -475,7 +475,7 @@ container_memory_working_set_bytes{namespace="athlon-prod", pod=~"spark-connect-
 | Dataproc on GKE | (동일) | **\$1,263/월** | \$1,584/년 (-9%) |
 | Cluster on GCE | \$1,921/월 | \$1,045/월 | \$10,513/년 (-46%) |
 
-→ **배포 모드 선택은 팀 논의 필요** (매니지드 도구 vs 비용). 결정 매트릭스: [[14_Spark Connect 다운사이즈 비용 &amp; 노드 구성 (Seoul 실측)#10 배포 모드 결정 매트릭스]]
+→ **배포 모드 선택은 팀 논의 필요** (매니지드 도구 vs 비용). 결정 매트릭스: [[14_Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)#10 배포 모드 결정 매트릭스]]
 
 **배포 모드 선택** (Serverless vs Cluster vs GKE): [[3_Spark Connect on Dataproc Serverless 비용 계산]]
 
