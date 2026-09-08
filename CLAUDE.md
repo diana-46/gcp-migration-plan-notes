@@ -7,15 +7,15 @@
 - 작성 규칙(명명·frontmatter·링크·import·보안·보조 폴더) → **`README.md` § Vault 운영 규칙**
 - 폴더별 컨텍스트(용어·외부자료·로컬 규칙·anti-context) → 각 폴더의 `README.md` (Nested 규칙: 폴더 안에서 작업하면 root README와 함께 반드시 읽는다)
 
-## 구조 한눈에 (폴더 번호 = 읽기 순서)
+## 구조 한눈에 (아래 순서 = 권장 읽기 순서)
 
 ```
-00-보고 → 10-스케줄러 · 11-asset · 12-deploy   (플랫폼: Airflow/Composer)
-        → 20-애슬론 · 21-dbt · 22-presto-to-bigquery   (ETL·쿼리 전환)
-        → 30-userlake · 31-spark-apps   (워커·앱 이관)
-        → 40-베리즈   (서비스별 실행)
-        → 50-공유   (대외 설명자료)
-90-wip = raw 작업장 (스크랩 제외) · attachments = 이미지
+reports → scheduler · asset · deploy   (플랫폼: Airflow/Composer)
+        → athlon · dbt · presto-to-bigquery   (ETL·쿼리 전환)
+        → userlake · spark-apps   (워커·앱 이관)
+        → berriz   (서비스별 실행)
+        → shared   (대외 설명자료)
+wip = raw 작업장 (스크랩 제외) · attachments = 이미지
 ```
 
 각 폴더 진입점 = 숫자 최저 노트(`0_결론`/`1_개요`). **폴더 내 수치·결론이 충돌하면 진입점 노트가 대표다.**
@@ -32,12 +32,12 @@ frontmatter `status` 4종: `wip`(제외) / `draft`(증언, 기본값 — frontma
 
 ## 함정 맵 (인용 시 주의)
 
-- `30-userlake/2·3·12·13·14` (Spark Connect 컴퓨트): **Dataproc 전제 검토·실측 — 컴퓨트 선택 미정, 확정 인용 금지.** 3은 archived 구판(14가 비용 대표)
+- `userlake/2·3·12·13·14` (Spark Connect 컴퓨트): **Dataproc 전제 검토·실측 — 컴퓨트 선택 미정, 확정 인용 금지.** 3은 archived 구판(14가 비용 대표)
 - 비용 수치는 basis(정가 추정 usage / 실측 measured / 약정 committed)를 병기해야 인용 가능
 
 ## 이 레포에서 작업하는 LLM 세션의 행동 규칙
 
-1. 새 raw 노트는 `90-wip/`에 (`2026-MM-DD 주제.md`). 주제 폴더 승격 시 frontmatter 필수.
+1. 새 raw 노트는 `wip/`에 (`2026-MM-DD 주제.md`). 주제 폴더 승격 시 frontmatter 필수.
 2. `status: final` 승격은 **사용자 확인 후에만** — final은 "팀 위키가 결론으로 인용해도 됨"의 선언이다.
 3. 팀 위키에서 가져온 내용을 노트에 쓸 때 `출처: 팀위키 <페이지>` 한 줄 필수 (순환 인용 차단).
 4. 파일 이동·리네임 최소화, 불가피하면 `git mv` (스크랩 인용이 경로@커밋 기반).
