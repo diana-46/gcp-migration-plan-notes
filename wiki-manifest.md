@@ -19,12 +19,13 @@ rules:
   - "*/PoC/** = reference (실행 상세 — 링크+요지만, 결론 인용은 status: final인 것만)"
   - "각 폴더 진입점 = 숫자 최저 노트(0_결론/1_개요). 폴더 내 수치가 충돌하면 진입점 노트가 대표"
   - "비용 수치 인용 시 basis 병기: 정가 추정(usage) / 실측(measured) / 약정(committed)"
+  - "이미지 없음 — 캡쳐성 내용은 전부 본문 텍스트로 서술, 다이어그램은 mermaid 코드블록(스크랩 가능)"
 
 exclude:
   - "wip/**"          # raw 작업장
   - "**/_archive/**"     # 폐기 보관소
   - "**/README.md"       # 디렉토리 안내·컨텍스트 (사람/에이전트용)
-  - "attachments/**"     # 이미지·첨부
+  - "**/*.html"          # 발표용 다이어그램 (내용은 노트 본문에 텍스트로 병기됨)
 
 pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다
   - "platform/athlon/userlake/2·3·12·13·14 (Spark Connect 컴퓨트): Dataproc Serverless 전제 검토·실측 —

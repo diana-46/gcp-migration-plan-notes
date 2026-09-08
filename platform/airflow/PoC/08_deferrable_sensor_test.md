@@ -146,26 +146,20 @@ gcloud composer environments storage logs read <env-name> \
 
 → **결과는 같은데 자원 비용이 완전히 다름** = sensor 다이어트의 효과 실증.
 
-## 실측 결과 (테스트 중)
+## 실측 결과 (2026-06-04, Composer dev)
 
+> 스크린샷 → 텍스트 전환 (2026-09-08, 이미지 미사용 정책). 동일 `TimeDeltaSensor`(delta=20분) 2개 병렬 실행 비교.
 
-![[Pasted image 20260604171427.png]]
-![[Pasted image 20260604171603.png]]
-직접 워커에서 실행하는 구조가 됨
+- **태스크 상태**: `1_traditional_sensor` = **Running** 유지 (워커 점유, Try 1) / `2_deferrable_sensor` = 시작 ~1초 만에 **Deferred** 전환 (Try 1).
+- **traditional 워커 로그**: 워커 프로세스가 **1분마다** `Checking if the delta has elapsed (base_time=…, delta=0:20:00)` — 20분 내내 워커에서 poke 반복. 직접 워커에서 실행하는 구조.
+- **deferrable 워커 로그**: `Pausing task as DEFERRED` 직후 `Task finished (exit_code=0, duration≈0.7s)` — **워커 즉시 반납**, trigger 쪽으로 넘기고 deferred 상태로 변경.
+- **triggerer 로그**: `1 triggers currently running / 0 watchers` 가 **60초 간격**으로 기록 — trigger 쪽에서 1분에 한 번씩 검사.
+- **완료 시맨틱**: 둘 다 Success, Duration **00:20:00 동일**. 성공하면 성공, 실패하면 똑같이 Airflow 의 retry 로직으로 재실행 — 기존 sensor 와 시맨틱 동일, 차이는 **대기 비용이 워커 → triggerer 로 옮겨가는 것**뿐.
 
-![[Pasted image 20260604171728.png]]
-trigger 쪽으로 넘기고 defered 상태로 변경
+### Worker pod 점유 (Composer 모니터링 실측)
 
-![[Pasted image 20260604171946.png]]
-trigger 쪽에서는 1분에 한번씩 검사하는 것으로 보임
-![[Pasted image 20260604173429.png]]
-성공하면 성공, 실패하면 똑같이 airflow 의 retry 로직에 의해 재실행 된다고 함.
-
-### Worker pod 점유
-
-![[Pasted image 20260604173652.png]]
-
-![[Pasted image 20260604173710.png]]
+- 태스크 큐: deferred 대기 동안 **CPU ~0.002 vCPU · 메모리 4.95MiB / 한도 150MiB** — 워커 자원 점유 사실상 0. "지연된 태스크" 1건, "미확인 Celery 작업" 스파이크 1~2회 외 평탄.
+- 트리거 대시보드: 완료된 트리거 1(성공, 실패 0) · 실행 중 트리거 1 · 차단 트리거 스파이크 1회 관측.
 
 
 
