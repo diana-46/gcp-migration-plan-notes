@@ -465,10 +465,10 @@ sensor(40) → Triggerer 1개 (lightweight)
 ## 관련 노트
 
 - [[README]] — 본 PoC 의 전체 흐름 (Step 4)
-- [[../3_Executor 종류 및 비교]] — Celery vs KubernetesExecutor 상세
-- [[../4_Queue 라우팅과 Pod 스펙 설정]] — Pod 사양 / executor_config 패턴
+- [[../research/2_Executor 종류 및 비교]] — Celery vs KubernetesExecutor 상세
+- [[../ops/1_Queue 라우팅과 Pod 스펙 설정]] — Pod 사양 / executor_config 패턴
 - [[platform/airflow/asset/11_Airflow Asset과 Dataset]] — Asset-based scheduling (sensor 대체 가능성)
-- [[../2_Cloud Composer vs Self-managed 비교]] — 표 B-5 "Worker queue 5종 → 패턴 전환"
+- [[../research/1_Cloud Composer vs Self-managed 비교]] — 표 B-5 "Worker queue 5종 → 패턴 전환"
 - [[01_airflow3_compat_grep]] — 코드 인벤토리 (sensor 패턴 grep)
 
 ## 시연용 자료 (회의)

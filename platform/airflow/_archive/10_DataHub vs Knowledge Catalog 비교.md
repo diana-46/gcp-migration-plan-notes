@@ -188,7 +188,7 @@ Knowledge Catalog 채택 시:
 ## 관련 문서
 
 - [[1_개요]] — 스케줄러 메인 결정
-- [[2_Cloud Composer vs Self-managed 비교]] — Composer 결정
+- [[1_Cloud Composer vs Self-managed 비교]] — Composer 결정
 - [[3_dbt 능력 경계와 영역 분담]] §11 — DataHub 통합 전략
 - [[platform/airflow/asset/11_Airflow Asset과 Dataset]] — Asset URI 표준
 - [[../../athlon/4_Asset-Centric 아키텍처 안]] §6 — Asset-Centric 디자인의 lineage 통합

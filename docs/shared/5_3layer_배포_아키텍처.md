@@ -1,7 +1,7 @@
 # 5. 3-layer 배포 아키텍처
 
 > Custom Operator / dbt / DAG 세 layer 의 독립 배포 + 정합성 확보 전략.
-> 관련: [[platform/airflow/7_4_DAG + dbt + Operator 3축 배포 통합]], [[platform/airflow/15_관리 레포 인벤토리]]
+> 관련: [[platform/airflow/deploy/3_DAG + dbt + Operator 3축 배포 통합]], [[platform/airflow/deploy/4_관리 레포 인벤토리]]
 
 ## 왜 3-layer 인가
 
@@ -192,8 +192,8 @@ Kpayment 팀:
 
 ## 관련 문서
 
-- [[platform/airflow/7_3_공통 Custom Operator 제공 방안]] — Provider 패키지 상세
-- [[platform/airflow/7_4_DAG + dbt + Operator 3축 배포 통합]] — 3-layer 통합 배포
-- [[platform/airflow/15_관리 레포 인벤토리]] — 저장소 인벤토리 + athlon → git 전환
-- [[platform/airflow/11_DAG Bundles와 배포 전략]] — DAG 배포 세부
+- [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]] — Provider 패키지 상세
+- [[platform/airflow/deploy/3_DAG + dbt + Operator 3축 배포 통합]] — 3-layer 통합 배포
+- [[platform/airflow/deploy/4_관리 레포 인벤토리]] — 저장소 인벤토리 + athlon → git 전환
+- [[platform/airflow/deploy/5_DAG Bundles와 배포 전략]] — DAG 배포 세부
 - [[platform/athlon/8_배포 시 유의할 점]] — 실전 배포 순서 함정

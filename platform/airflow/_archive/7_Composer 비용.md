@@ -128,13 +128,13 @@ Composer 3는 컴포넌트별 vCPU·메모리·시간 단위 과금이지만 **0
 
 | 방법 | 효과 | Composer 3 | Self-managed |
 |---|---|---|---|
-| **Hybrid 실행** (Celery + KubernetesExecutor) | 짧은 task는 Celery로 → Pod 안 만듦 ([[4_Queue 라우팅과 Pod 스펙 설정]]) | ✅ | ✅ |
+| **Hybrid 실행** (Celery + KubernetesExecutor) | 짧은 task는 Celery로 → Pod 안 만듦 ([[1_Queue 라우팅과 Pod 스펙 설정]]) | ✅ | ✅ |
 | **Deferrable Sensor / Trigger** | sensor 워커 점유 줄임 | ✅ | ✅ |
 | **Spot/Preemptible 노드 풀** | 노드 비용 60~70% 절감 가능 (재시도 가능한 task만) | ❌ (관리 컴포넌트 불가) | ✅ |
 | **CUD (Committed Use Discount)** | compute 1년 -25%, 3년 -55% | △ (일부 SKU만) | ✅ |
 | **로그 보존 기간 조정** | 30일 → 14일로 줄이면 즉시 절감 | ✅ | ✅ |
 | **scheduler/web server 최소 사양으로** | idle 시 floor 비용 ↓ | ✅ | ✅ |
-| **DB 사이즈 적정화** ([[5_Metadata DB 운영]]) | 정기 cleanup + 적정 사양 | △ (Composer가 일부 통제) | ✅ |
+| **DB 사이즈 적정화** ([[2_Metadata DB 운영]]) | 정기 cleanup + 적정 사양 | △ (Composer가 일부 통제) | ✅ |
 | **Budget alert** | 예산 초과 알람 (필수) | ✅ | ✅ |
 
 → **할인 적용 가능 범위에서 Self-managed가 구조적으로 유리**.
@@ -147,7 +147,7 @@ Composer 3는 컴포넌트별 vCPU·메모리·시간 단위 과금이지만 **0
 | Medium | Self-managed가 **~$200~500/월 저렴** (Spot/CUD 적용 시) |
 | Large | Self-managed가 **~$500~1,000/월 저렴** (Spot/CUD 적용 시) |
 
-> ⚠️ 본 문서는 **GCP 청구액만** 비교. 운영 인력 / 안정성 / 마이그레이션 비용 등은 [[2_Cloud Composer vs Self-managed 비교]] 참조.
+> ⚠️ 본 문서는 **GCP 청구액만** 비교. 운영 인력 / 안정성 / 마이그레이션 비용 등은 [[1_Cloud Composer vs Self-managed 비교]] 참조.
 
 ## PoC / 검증 추가 항목
 
@@ -168,8 +168,8 @@ Composer 3는 컴포넌트별 vCPU·메모리·시간 단위 과금이지만 **0
 ## 관련 문서
 
 - [[1_개요]]
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[3_Executor 종류 및 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]]
-- [[5_Metadata DB 운영]]
-- [[6_Airflow 2 vs 3 비교]]
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[2_Executor 종류 및 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]]
+- [[2_Metadata DB 운영]]
+- [[3_Airflow 2 vs 3 비교]]

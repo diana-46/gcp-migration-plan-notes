@@ -262,9 +262,9 @@ Airflow UI 에서 `poc_custom_pkg` DAG trigger → task log:
 ## 관련 노트
 
 - [[README]] — 본 PoC 의 전체 흐름 (Step 3)
-- [[../2_Cloud Composer vs Self-managed 비교]] — 호환성 표 B-4 "사내 PyPI / wheel 직접 설치"
+- [[../research/1_Cloud Composer vs Self-managed 비교]] — 호환성 표 B-4 "사내 PyPI / wheel 직접 설치"
 - [[02_dag_deployment]] — DAG 배포 측면. 본 노트는 코드 install 쪽
-- [[../11_DAG Bundles와 배포 전략]] — DAG 배포 전략 일반
+- [[../deploy/5_DAG Bundles와 배포 전략]] — DAG 배포 전략 일반
 
 ## 부록 — 테스트 패키지 구조
 

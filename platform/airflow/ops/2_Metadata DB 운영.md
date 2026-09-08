@@ -107,6 +107,6 @@ gcloud composer environments run my-env --location=us-central1 \
 ## 관련 문서
 
 - [[1_개요]]
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[3_Executor 종류 및 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]]
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[2_Executor 종류 및 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]]

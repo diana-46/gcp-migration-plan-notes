@@ -40,7 +40,7 @@ created: 2026-06-25
 | 2 | dbt project | ETL/변환 로직 (SQL + schema.yml) | DE 도메인 팀 |
 | 3 | DAG repo | Airflow DAG / 스케줄 / 백필 | DE 도메인 팀 |
 
-상세: [[platform/airflow/15_관리 레포 인벤토리]]
+상세: [[platform/airflow/deploy/4_관리 레포 인벤토리]]
 
 ---
 
@@ -87,7 +87,7 @@ created: 2026-06-25
 - **review / 테스트 / rollback** — DB row 기반 변경엔 불가능했던 표준 git 워크플로 적용
 - **GCP 이관 시 어차피 athlon DB 자체가 Cloud SQL 로 가야 함** — 이 기회에 git 으로 옮기면 동시 작업
 
-상세: [[platform/airflow/15_관리 레포 인벤토리]] § 2
+상세: [[platform/airflow/deploy/4_관리 레포 인벤토리]] § 2
 
 ---
 
@@ -199,7 +199,7 @@ created: 2026-06-25
 |---|---|
 | [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] | PoC 결론 — 기술 실현 가능성 확정 |
 | [[platform/athlon/6_마이그레이션 플랜]] | Phase 별 활동 / RACI / Gate / 일정 |
-| [[platform/airflow/15_관리 레포 인벤토리]] | 운영 모델 (3 레포) / AS-IS vs TO-BE |
+| [[platform/airflow/deploy/4_관리 레포 인벤토리]] | 운영 모델 (3 레포) / AS-IS vs TO-BE |
 | [[platform/dbt/1_materialization]] ~ [[platform/dbt/6_배포와 환경 분리]] | dbt 패턴 상세 |
 | [[platform/athlon/2_Git 동기화·dbt 전환 계획]] | 초기 전환 계획 |
 | [[platform/athlon/3_dbt 능력 경계와 영역 분담]] | dbt vs Airflow 책임 분리 |

@@ -86,7 +86,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 → "best of both worlds" 패턴
 → Redis (Memorystore) 필요
 
-상세 — [[3_Executor 종류 및 비교]], [[4_Queue 라우팅과 Pod 스펙 설정]]
+상세 — [[2_Executor 종류 및 비교]], [[1_Queue 라우팅과 Pod 스펙 설정]]
 
 ## 결정 기준
 
@@ -98,10 +98,10 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 | 패키지 / Executor / 네트워크 완전 자유 | Self-managed |
 | **Worker queue 분리** 필요 | Self-managed |
 | Multi-tenancy (한 환경에 여러 팀) 필요 | Self-managed |
-| 비용 절감 1순위 + 운영 인력 충분 | Self-managed (단, 인건비 고려 필수 — [[_archive/7_Composer 비용]]) |
+| 비용 절감 1순위 + 운영 인력 충분 | Self-managed (단, 인건비 고려 필수 — [[../_archive/7_Composer 비용]]) |
 | 사내 IDP 깊은 커스터마이즈 필요 | Self-managed |
 
-> 비용 / 권한 측면 상세 — [[_archive/7_Composer 비용]], [[8_Composer 권한 및 인증]].
+> 비용 / 권한 측면 상세 — [[../_archive/7_Composer 비용]], [[4_Composer 권한 및 인증]].
 
 ---
 
@@ -143,7 +143,7 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 
 | # | 항목 | Composer 3 | Self-managed |
 |---|---|---|---|
-| 1 | **사내 LDAP 인증** | ❌ → **IAP + Google IAM 강제**. Google Workspace 로 통과 가능한지 확인 필요 | ✅ Okta/OIDC 가능 ([[8_Composer 권한 및 인증]]) |
+| 1 | **사내 LDAP 인증** | ❌ → **IAP + Google IAM 강제**. Google Workspace 로 통과 가능한지 확인 필요 | ✅ Okta/OIDC 가능 ([[4_Composer 권한 및 인증]]) |
 | 2 | **사내 git (`github.kakaocorp.com`) SSH + Vault** | DAG 배포 흐름 통째로 변경. GCS sync + Secret Manager (DAG Bundles 불가) | git-sync sidecar 그대로 가능 (사내 git 접근 패턴 유지) |
 | 3 | **사내망 ↔ GCP VPC 연결** | Cloud Interconnect / VPN / Private Service Connect 필요 (양쪽 동일) | 동일 |
 | 4 | **사내 PyPI / wheel 직접 설치** | Artifact Registry private repo 통과. 사내 PyPI mirror 필요 | 자유 |
@@ -193,8 +193,8 @@ source: https://kakaoent.atlassian.net/wiki/spaces/DP/pages/5068260232/Airflow+C
 ## 관련 문서
 
 - [[1_개요]]
-- [[3_Executor 종류 및 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]]
-- [[5_Metadata DB 운영]]
-- [[_archive/7_Composer 비용]]
-- [[8_Composer 권한 및 인증]]
+- [[2_Executor 종류 및 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]]
+- [[2_Metadata DB 운영]]
+- [[../_archive/7_Composer 비용]]
+- [[4_Composer 권한 및 인증]]

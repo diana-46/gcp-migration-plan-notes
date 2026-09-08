@@ -11,5 +11,5 @@
 
 ## 관련 자료
 
-- Terraform 첫 케이스: [[platform/airflow/16_Composer3 신규 환경 구축 (Terraform)|스케줄러/16_Composer3 신규 환경 구축 (Terraform)]] (`dev-berriz-airflow`)
+- Terraform 첫 케이스: [[platform/airflow/ops/6_Composer3 신규 환경 구축 (Terraform)|스케줄러/6_Composer3 신규 환경 구축 (Terraform)]] (`dev-berriz-airflow`)
 - 공유 Airflow 규약: [[platform/airflow/deploy/2_공유 Airflow 사용 가이드|deploy/2_공유 Airflow 사용 가이드]]

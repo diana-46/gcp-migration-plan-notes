@@ -447,10 +447,10 @@ def get_provider_info() -> dict:
 
 ## 7. 관련 문서
 
-- [[7_2_리소스 다이어트 포인트]] — sensor → deferrable 등 코드 레벨 다이어트 (별도 트랙)
-- [[11_DAG Bundles와 배포 전략]] — DAG 자체의 배포 (본 문서는 operator 자산만 다룸)
-- [[13_Composer 3 환경 업그레이드 정책]] — Composer 측 PyPI 패키지 업데이트 사이클
-- [[2_Cloud Composer vs Self-managed 비교]]
+- [[3_리소스 다이어트 포인트]] — sensor → deferrable 등 코드 레벨 다이어트 (별도 트랙)
+- [[5_DAG Bundles와 배포 전략]] — DAG 자체의 배포 (본 문서는 operator 자산만 다룸)
+- [[5_Composer 3 환경 업그레이드 정책]] — Composer 측 PyPI 패키지 업데이트 사이클
+- [[1_Cloud Composer vs Self-managed 비교]]
 
 ## 참고
 

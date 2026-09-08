@@ -345,5 +345,5 @@ Composer scheduler 자동 sync (1~2분)
 |---|---|
 | [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] | PoC 결론 + 기술 실현성 |
 | [[platform/athlon/6_마이그레이션 플랜]] | Phase 별 일정 / 리소스 |
-| [[platform/airflow/15_관리 레포 인벤토리]] | 운영 모델 / 레포 구조 |
+| [[platform/airflow/deploy/4_관리 레포 인벤토리]] | 운영 모델 / 레포 구조 |
 | [[platform/dbt/6_배포와 환경 분리]] | 배포 자동화 / 실측 함정 5가지 |

@@ -30,7 +30,7 @@ updated: 2026-06-12
 - `extras` 로 옵션 의존성 (예: hive / gcp) 분리 설치
 - OpenLineage hook 자동 emit (선택)
 
-→ 결과에 따라 [[../7_3_공통 Custom Operator 제공 방안]] / [[../7_4_DAG + dbt + Operator 3축 배포 통합]] 의 패키지 규격 결정 최종화.
+→ 결과에 따라 [[../deploy/_archive/공통 Custom Operator 제공 방안]] / [[../deploy/3_DAG + dbt + Operator 3축 배포 통합]] 의 패키지 규격 결정 최종화.
 
 ## 환경
 
@@ -269,15 +269,15 @@ gsutil cp dags/poc_provider_pkg.py gs://dev-airflow-test-bucket/dags/
 
 | 결과 | 영향 |
 |---|---|
-| ✅ 자동 등록 + Connection type 동작 | [[../7_3_공통 Custom Operator 제공 방안]] / [[../7_4_DAG + dbt + Operator 3축 배포 통합]] 에 **provider 규격으로 확정** |
+| ✅ 자동 등록 + Connection type 동작 | [[../deploy/_archive/공통 Custom Operator 제공 방안]] / [[../deploy/3_DAG + dbt + Operator 3축 배포 통합]] 에 **provider 규격으로 확정** |
 | ⚠️ 일부만 동작 | 동작하는 가치만 가져오고 일반 패키지로 갈 가능성 검토 |
 | ❌ 의외의 차단 | PoC 03 의 일반 패키지 방식 유지, 별도 등록 작업 추가 |
 
 ## 관련 문서
 
 - [[03_custom_operator_pypi]] — 일반 패키지로 install 검증 (선행 PoC, 인프라 재사용)
-- [[../7_3_공통 Custom Operator 제공 방안]] — 본 PoC 결과 반영 대상
-- [[../7_4_DAG + dbt + Operator 3축 배포 통합]] — Layer 1 결정 영향
+- [[../deploy/_archive/공통 Custom Operator 제공 방안]] — 본 PoC 결과 반영 대상
+- [[../deploy/3_DAG + dbt + Operator 3축 배포 통합]] — Layer 1 결정 영향
 - [[../0_결론]] — 사내 wheel 운영 방향
 
 ## 참고

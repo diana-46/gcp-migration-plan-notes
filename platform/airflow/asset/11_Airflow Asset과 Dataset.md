@@ -291,6 +291,6 @@ daily_summary_alias = AssetAlias("daily_user_summary")
 ## 관련 문서
 
 - [[1_개요]] — 스케줄러 메인 결정
-- [[6_Airflow 2 vs 3 비교]] — 버전 결정 (Asset 도 신규 기능 중 하나로 언급됨)
+- [[3_Airflow 2 vs 3 비교]] — 버전 결정 (Asset 도 신규 기능 중 하나로 언급됨)
 - [[../../athlon/4_Asset-Centric 아키텍처 안]] — Asset 위에 올라타는 우리 디자인
 - [[../../athlon/PoC/README]] — Asset 직접 만져보기

@@ -7,7 +7,7 @@
 > 1. **왜 dbt** (SQL 축)
 > 2. **왜 팀별로 airflow-dags 를 나눠 관리** (오케스트레이션 축)
 >
-> 관련: [[5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[6_마이그레이션 플랜]], [[platform/airflow/15_관리 레포 인벤토리]]
+> 관련: [[5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[6_마이그레이션 플랜]], [[platform/airflow/deploy/4_관리 레포 인벤토리]]
 
 ---
 
@@ -94,18 +94,18 @@ Story 팀 시연 대상 4 mart 이관 결과:
 
 지금 athlon 은 **DB 기반 스케줄링**:
 - MySQL 에 저장된 DAG 정의 / 스케줄 상태를 매 분·초 폴링
-- 측정치: 300~900 queries/minute (관련: [[platform/airflow/15_관리 레포 인벤토리]] § athlon DB 한계)
+- 측정치: 300~900 queries/minute (관련: [[platform/airflow/deploy/4_관리 레포 인벤토리]] § athlon DB 한계)
 - DAG 수, 팀 수 늘어날수록 부하 선형 증가 → DB CPU / 네트워크 / 잠금 경합
 
 GCP Composer 로 옮기면 요금 모델이 바뀜:
-- Composer 3 요금 = **DCU (vCPU + RAM 시간)** — 관련: [[platform/airflow/14_Composer 3 비용 구조]]
+- Composer 3 요금 = **DCU (vCPU + RAM 시간)** — 관련: [[platform/airflow/cost/2_Composer 3 비용 구조]]
 - Scheduler / DAG processor / triggerer 는 24×7 상주 → floor cost 발생
 - DAG 밀도·파싱 부하가 그대로 스케줄러 스펙 = 요금 증가로 이어짐
 
 **팀별 저장소가 이 두 축을 동시에 해결**:
 
 1. **git 기반 DAG = DB 폴링 자체가 사라짐**  
-   Composer scheduler 는 GCS 파일 + 파싱된 manifest 캐시로 동작. athlon MySQL 을 계속 찌르던 구조 소멸. GCP 이관의 리소스 절감 목표 (관련: [[platform/airflow/7_1_실제 스펙 산정]], [[platform/airflow/7_2_리소스 다이어트 포인트]]) 의 큰 지렛대 하나.
+   Composer scheduler 는 GCS 파일 + 파싱된 manifest 캐시로 동작. athlon MySQL 을 계속 찌르던 구조 소멸. GCP 이관의 리소스 절감 목표 (관련: [[platform/airflow/cost/1_실제 스펙 산정]], [[platform/airflow/ops/3_리소스 다이어트 포인트]]) 의 큰 지렛대 하나.
 
 2. **팀별 스케일 격리·확장 여지**  
    저장소가 팀별로 나뉘면 **팀별 Composer 로 확장할 수 있는 옵션**이 열림. 각 팀 스케줄러가 자기 DAG 만 파싱 → 도메인별 요금 visibility 개선. 한 Composer 공유 케이스여도 팀별 스킴 유지 시 파싱 실패 격리, 이슈 blast radius 축소.
@@ -180,7 +180,7 @@ gs://COMPOSER_BUCKET/dags/
 
 **"Python DAG 못 짜면 어쩌지"**  
 사내 operator (Nabi/Loupe/Hive/BQ 등) 는 `apache-airflow-providers-kakaoent-dataplatform` 패키지로 재배포 — `pip install` 후 `import` 로 그대로 씀. LLM 도구 (Claude, Copilot) 진입 문턱 크게 낮춤.  
-관련: [[platform/airflow/7_3_공통 Custom Operator 제공 방안]]
+관련: [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]]
 
 **"팀별로 저장소 만드는 부담"**  
 저장소 초기 셋업은 platform 팀 template 로 하루 안 걸림. 이후엔 팀 자율 배포. `airflow-dags` 공유 저장소보다 오히려 부담 줄어듦 (팀 내 리뷰만).
@@ -212,5 +212,5 @@ Neptune 이 부족했다는 얘기가 아니라, Hive/Presto → BQ 환경 변�
 - [[5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] — 이관 기술 검증
 - [[6_마이그레이션 플랜]] — Phase 0~3 실행 플랜
 - [[8_배포 시 유의할 점]] — 실전 배포 함정 정리
-- [[platform/airflow/7_3_공통 Custom Operator 제공 방안]] — provider 패키지 설계
-- [[platform/airflow/15_관리 레포 인벤토리]] — 3-layer 저장소 구조
+- [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]] — provider 패키지 설계
+- [[platform/airflow/deploy/4_관리 레포 인벤토리]] — 3-layer 저장소 구조

@@ -122,7 +122,7 @@ gcloud composer environments snapshots load <env-name>-restored \
 
 ### 2.0 공식 정책 (정리 문서 참조)
 
-Composer 3 공식 업그레이드 정책 사실은 **별도 정리 노트**: [[../13_Composer 3 환경 업그레이드 정책]]
+Composer 3 공식 업그레이드 정책 사실은 **별도 정리 노트**: [[../ops/5_Composer 3 환경 업그레이드 정책]]
 
 본 PoC 시나리오 2 에서 활용하는 핵심 사실 (공식 명시):
 
@@ -292,10 +292,10 @@ gcloud composer environments snapshots load <env-name>-rollback \
 
 ## 관련 문서
 
-- [[../7_1_실제 스펙 산정]] — 운영 비용 / SLA 산정
+- [[../cost/1_실제 스펙 산정]] — 운영 비용 / SLA 산정
 - [[02_dag_deployment]] — DAG bucket 동기화 패턴
 - 06_iam_workspace_rbac (PoC 미생성, 필요 시) — RBAC snapshot 포함 여부
-- [[../8_Composer 권한 및 인증]] — 사용자 / Role 복구 영향
+- [[../ops/4_Composer 권한 및 인증]] — 사용자 / Role 복구 영향
 
 ## 참고
 

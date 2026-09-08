@@ -273,5 +273,5 @@ with DAG(
 
 - [[9_Airflow3_Composer_이관_변경사항]] § 1-4 — Deferrable / Triggerer 개요
 - [[platform/airflow/asset/11_Airflow Asset과 Dataset]] — Asset 개념 상세
-- [[platform/airflow/7_2_리소스 다이어트 포인트]] — 실측 리소스 절감 효과
+- [[platform/airflow/ops/3_리소스 다이어트 포인트]] — 실측 리소스 절감 효과
 - [[7_Lineage와_관측성]] — Asset 기반 cross-DAG dependency 실증

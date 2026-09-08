@@ -2,7 +2,7 @@
 
 > Airflow 2 → 3 + Self-managed → Cloud Composer 3 이관에서 **DE / 운영 관점에서 실제로
 > 코드·워크플로우·운영이 어떻게 바뀌는지** 정리.
-> 관련: [[platform/airflow/6_Airflow 2 vs 3 비교]], [[platform/airflow/1_개요]], [[platform/athlon/8_배포 시 유의할 점]]
+> 관련: [[platform/airflow/research/3_Airflow 2 vs 3 비교]], [[platform/airflow/1_개요]], [[platform/athlon/8_배포 시 유의할 점]]
 
 ---
 
@@ -25,7 +25,7 @@
 | Composer 2 | 기존 팀 관성 | Airflow 2 종속 → 3 이관 필요 시 재작업 |
 
 **채택 근거**: 이관 초기엔 관리 부담 축소가 이득 > 요금 프리미엄. 팀 규모 · 파이프라인 성숙도에 따라 Phase 2 후 자체 관리로 이동 옵션은 열려 있음.
-관련: [[platform/airflow/2_Cloud Composer vs Self-managed 비교]], [[platform/airflow/0_결론]]
+관련: [[platform/airflow/research/1_Cloud Composer vs Self-managed 비교]], [[platform/airflow/0_결론]]
 
 ### 0-3. 왜 Airflow 3 (Composer 2 아니라 3)
 
@@ -47,7 +47,7 @@ Composer 는 GCP 네이티브 → 데이터 · 인증 · 배포 도구가 **모�
 **IAM + Workload Identity** — 인증 · 권한 통합:
 - Composer 환경 SA 가 BQ / GCS / Pub/Sub 등 접근 → SA key JSON 관리 대신 WI 로 자동 인증
 - DE 계정: Google Workspace SSO → GCP IAM → IAP → Airflow UI (LDAP 인증 사라짐)
-- 관련: [[platform/airflow/8_Composer 권한 및 인증]]
+- 관련: [[platform/airflow/ops/4_Composer 권한 및 인증]]
 
 **Cloud Logging / Monitoring** — 관측성 자동:
 - Task 로그 자동 수집 (별도 설정 X)
@@ -58,7 +58,7 @@ Composer 는 GCP 네이티브 → 데이터 · 인증 · 배포 도구가 **모�
 - `apache-airflow-providers-kakaoent-dataplatform` 등 사내 패키지 배포
 - `pip install --extra-index-url` 로 소비
 - SA + `keyrings.google-artifactregistry-auth` 인증
-- 관련: [[platform/airflow/7_3_공통 Custom Operator 제공 방안]]
+- 관련: [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]]
 
 **Secret Manager** (선택) — GH Actions WIF / DataHub token 등 secrets 관리 (아직 세팅 안 함, 이관 후 도입 예정)
 
@@ -141,7 +141,7 @@ Airflow 2 에서는 deferrable 이 옵션 · 추가 기능이었지만, Airflow 
 
 **사용법**: 대부분 `deferrable=True` 파라미터 하나 추가하면 됨.
 
-- 실측 예 ([[platform/airflow/7_2_리소스 다이어트 포인트]]): sensor 하나가 **월 522 worker-hours**
+- 실측 예 ([[platform/airflow/ops/3_리소스 다이어트 포인트]]): sensor 하나가 **월 522 worker-hours**
   점유 → deferrable 로 옮기면 near-zero
 - Composer DCU 요금 축소의 큰 지렛대
 
@@ -178,7 +178,7 @@ Airflow 2 에서는 deferrable 이 옵션 · 추가 기능이었지만, Airflow 
 - **CeleryKubernetesExecutor 강제** (Composer 3)
 - `KubernetesExecutor` 단독 사용 불가
 - Celery worker 큐 격리 제한
-- 관련: [[platform/airflow/3_Executor 종류 및 비교]]
+- 관련: [[platform/airflow/research/2_Executor 종류 및 비교]]
 
 ### 2-3. DAG 배포 방식
 
@@ -216,7 +216,7 @@ gcloud composer environments update ENV_NAME \
 
 ### 2-6. 인증 · 권한
 
-**3-layer 모델** (관련: [[platform/airflow/8_Composer 권한 및 인증]]):
+**3-layer 모델** (관련: [[platform/airflow/ops/4_Composer 권한 및 인증]]):
 
 1. **UI 접근**: GCP IAM (`composer.user` 등) → Google SSO 로그인 (IAP 통해)
 2. **Airflow 액션**: FAB RBAC (Admin/Op/User/Viewer/Public) — 기존과 동일
@@ -240,7 +240,7 @@ gcloud composer environments update ENV_NAME \
 
 **After (Composer 3)**: 원가 = **DCU** (Data Compute Unit) — 24×7 상주 컴포넌트 + 사용량
 - Scheduler / DAG processor / triggerer 는 DAG 0 개여도 floor cost (~$200-300/월)
-- 관련: [[platform/airflow/14_Composer 3 비용 구조]], [[4_Composer_조사_요약]] § 4
+- 관련: [[platform/airflow/cost/2_Composer 3 비용 구조]], [[4_Composer_조사_요약]] § 4
 
 ---
 
@@ -453,12 +453,12 @@ with DAG(
 
 ## 관련 문서
 
-- [[platform/airflow/6_Airflow 2 vs 3 비교]] — Airflow 버전 breaking change 상세
+- [[platform/airflow/research/3_Airflow 2 vs 3 비교]] — Airflow 버전 breaking change 상세
 - [[platform/airflow/1_개요]] — Composer 3 운영 방향
-- [[platform/airflow/2_Cloud Composer vs Self-managed 비교]] — Composer 채택 근거
-- [[platform/airflow/8_Composer 권한 및 인증]] — 3-layer 인증 모델
+- [[platform/airflow/research/1_Cloud Composer vs Self-managed 비교]] — Composer 채택 근거
+- [[platform/airflow/ops/4_Composer 권한 및 인증]] — 3-layer 인증 모델
 - [[platform/airflow/asset/11_Airflow Asset과 Dataset]] — Asset 개념 상세
-- [[platform/airflow/11_DAG Bundles와 배포 전략]] — DAG 배포 전략
-- [[platform/airflow/14_Composer 3 비용 구조]] — DCU 요금 모델
+- [[platform/airflow/deploy/5_DAG Bundles와 배포 전략]] — DAG 배포 전략
+- [[platform/airflow/cost/2_Composer 3 비용 구조]] — DCU 요금 모델
 - [[platform/athlon/8_배포 시 유의할 점]] — 실전 배포 함정
 - [[4_Composer_조사_요약]] — 조사 결과 총정리

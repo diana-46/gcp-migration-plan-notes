@@ -248,7 +248,7 @@ DAG의 task가 BigQuery / GCS / Pub/Sub 등에 접근할 때 필요.
 
 - task 종류별로 다른 권한이 필요할 때
 - `KubernetesPodOperator` 의 `service_account_name` 로 task별 KSA 지정
-- 상세 — [[4_Queue 라우팅과 Pod 스펙 설정]]
+- 상세 — [[1_Queue 라우팅과 Pod 스펙 설정]]
 
 ---
 
@@ -581,12 +581,12 @@ AUTH_ROLES_SYNC_AT_LOGIN = True
 ## 관련 문서
 
 - [[1_개요]]
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[3_Executor 종류 및 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]]
-- [[5_Metadata DB 운영]]
-- [[6_Airflow 2 vs 3 비교]]
-- [[_archive/7_Composer 비용]]
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[2_Executor 종류 및 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]]
+- [[2_Metadata DB 운영]]
+- [[3_Airflow 2 vs 3 비교]]
+- [[../_archive/7_Composer 비용]]
 
 ## 출처
 

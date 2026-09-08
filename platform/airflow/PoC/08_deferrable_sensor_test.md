@@ -18,11 +18,11 @@ updated: 2026-06-04
 >
 > **답 (예상)**: ✅ Traditional 은 **Running (초록색)** 으로 워커 슬롯 점유, Deferrable 은 **Deferred (보라색)** 로 즉시 반납 → Triggerer 가 비동기 처리.
 >
-> [[04_worker_pool_queue]] 에서 "Deferrable sensor + Triggerer 정상" 발견(4번)을 시각적으로 1:1 비교 검증하는 후속 PoC. [[../7_2_리소스 다이어트 포인트]] 의 전제 검증.
+> [[04_worker_pool_queue]] 에서 "Deferrable sensor + Triggerer 정상" 발견(4번)을 시각적으로 1:1 비교 검증하는 후속 PoC. [[../ops/3_리소스 다이어트 포인트]] 의 전제 검증.
 
 ## 검증 의도
 
-[[../7_2_리소스 다이어트 포인트]] 에서 정리한 sensor 다이어트의 효과를 **눈으로 확인**:
+[[../ops/3_리소스 다이어트 포인트]] 에서 정리한 sensor 다이어트의 효과를 **눈으로 확인**:
 
 - Traditional Sensor (Poke 모드): 20분 대기 = Worker 슬롯 20분 점유 → 메모리 4 GB 점유
 - Deferrable Sensor: Triggerer 에 위임 → Worker 슬롯 즉시 반납 → 메모리 점유 거의 0
@@ -165,7 +165,7 @@ gcloud composer environments storage logs read <env-name> \
 
 ## 함의 — 사내 적용 시
 
-[[../7_2_리소스 다이어트 포인트]] 와 연결:
+[[../ops/3_리소스 다이어트 포인트]] 와 연결:
 
 | Sensor 타입 | 적용 방법 |
 |---|---|
@@ -186,10 +186,10 @@ gcloud composer environments storage logs read <env-name> \
 
 ## 관련 문서
 
-- [[../7_1_실제 스펙 산정]] — 옵션 B (sensor 다이어트로 ₩200만/월 절감) 의 전제
-- [[../7_2_리소스 다이어트 포인트]] — sensor → trigger 전환 전체 가이드
+- [[../cost/1_실제 스펙 산정]] — 옵션 B (sensor 다이어트로 ₩200만/월 절감) 의 전제
+- [[../ops/3_리소스 다이어트 포인트]] — sensor → trigger 전환 전체 가이드
 - [[04_worker_pool_queue]] — Triggerer 기본 동작 검증 (선행 PoC)
-- [[../6_Airflow 2 vs 3 비교]] — Airflow 3 의 Triggerer / Deferrable 변화
+- [[../research/3_Airflow 2 vs 3 비교]] — Airflow 3 의 Triggerer / Deferrable 변화
 
 ## 참고
 

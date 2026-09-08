@@ -175,7 +175,7 @@ workflow = _get_workflow(session, name)
 | 전체 테스트 + 디버깅 | 1주 |
 | **총 (인프라 협의 제외)** | **3~5주** |
 
-→ [[../2_Cloud Composer vs Self-managed 비교]] §E 에서 추정한 6~12주 와 align.
+→ [[../research/1_Cloud Composer vs Self-managed 비교]] §E 에서 추정한 6~12주 와 align.
 
 ## 🚨 진짜 큰 미지수 / 회의 안건
 
@@ -221,5 +221,5 @@ workflow = _get_workflow(session, name)
 ## 관련
 
 - [[README]] — PoC 전체 인벤토리
-- [[../2_Cloud Composer vs Self-managed 비교]] §"현 사내 Airflow 셋업 → Composer 3 호환성"
-- [[../6_Airflow 2 vs 3 비교]] — Airflow 3 의 호환성 변화
+- [[../research/1_Cloud Composer vs Self-managed 비교]] §"현 사내 Airflow 셋업 → Composer 3 호환성"
+- [[../research/3_Airflow 2 vs 3 비교]] — Airflow 3 의 호환성 변화

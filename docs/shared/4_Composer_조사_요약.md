@@ -32,7 +32,7 @@ Provider 패키지
 - **결정**: Composer 3
 - **근거**: 관리형 인프라 이득 (GKE / Cloud SQL / Memorystore / WI / 백업), Airflow 3 지원, 서울 리전
 - **비용**: Composer 3 이 self-managed 대비 20-35% 비쌈, 그러나 운영 자원 (0.5+ FTE) 절감이 상쇄
-- 상세: [[platform/airflow/2_Cloud Composer vs Self-managed 비교]]
+- 상세: [[platform/airflow/research/1_Cloud Composer vs Self-managed 비교]]
 
 ### 2. Airflow 2 → 3
 
@@ -43,14 +43,14 @@ Provider 패키지
   - DAG Bundles
   - Removed: SubDAG, SLA, Smart Sensor
 - **호환성**: 기존 DAG 80% passthrough, 15% 리팩토링, 5% 인프라 재구성
-- 상세: [[platform/airflow/6_Airflow 2 vs 3 비교]]
+- 상세: [[platform/airflow/research/3_Airflow 2 vs 3 비교]]
 
 ### 3. Executor
 
 - **결정**: CeleryKubernetesExecutor (Composer 3 강제)
 - **패턴**: Celery worker 로 경량 태스크, K8s pod 으로 중량 태스크
 - **PoC 결과**: Celery + Triggerer 조합으로 대부분 커버, dbt 무거운 task 는 K8s executor 로 분리
-- 상세: [[platform/airflow/3_Executor 종류 및 비교]], [[platform/airflow/4_Queue 라우팅과 Pod 스펙 설정]]
+- 상세: [[platform/airflow/research/2_Executor 종류 및 비교]], [[platform/airflow/ops/1_Queue 라우팅과 Pod 스펙 설정]]
 
 ### 4. 비용 구조 (DCU)
 
@@ -58,7 +58,7 @@ Provider 패키지
 - **Floor cost**: 12 DCU/h Small preset ≈ $526/월 (us-central1), ~$631/월 (asia-northeast3 추정)
 - **절감 가능**: Worker autoscale, sizedown, 센서 deferrable 전환, DB cleanup, DAG 파싱 최적화, log archival, dev env 셧다운
 - **절감 불가**: Spot nodes, CUD (제한적 SKU)
-- 상세: [[platform/airflow/14_Composer 3 비용 구조]], [[platform/airflow/7_0_Composer 비용 한눈에]]
+- 상세: [[platform/airflow/cost/2_Composer 3 비용 구조]], [[platform/airflow/_archive/Composer 비용 한눈에]]
 
 ### 5. 실측 스펙 산정 결과
 
@@ -71,7 +71,7 @@ Provider 패키지
 
 - **매니저 다운사이징 즉시 안전** (18% CPU, 9% 메모리 사용)
 - **워커 메모리 다이어트는 센서 deferrable 전환 후 안전**
-- 상세: [[platform/airflow/7_1_실제 스펙 산정]], [[platform/airflow/7_2_리소스 다이어트 포인트]]
+- 상세: [[platform/airflow/cost/1_실제 스펙 산정]], [[platform/airflow/ops/3_리소스 다이어트 포인트]]
 
 ### 6. 권한·인증
 
@@ -80,7 +80,7 @@ Provider 패키지
   - Layer 2 (Airflow Actions): FAB RBAC (Admin/Op/User/Viewer)
   - Layer 3 (GCP Resources): Workload Identity → 환경 SA → BQ/GCS/Pub/Sub
 - **PoC 결과**: 3-layer 정상 동작 확인 (`test-airflow3` 환경)
-- 상세: [[platform/airflow/8_Composer 권한 및 인증]]
+- 상세: [[platform/airflow/ops/4_Composer 권한 및 인증]]
 
 ### 7. Airflow Asset
 
@@ -97,14 +97,14 @@ Provider 패키지
   - **GitDagBundle** (Airflow 3 native, PR/version-lock/refresh_interval 설정)
 - **우리 선택**: 팀별 저장소 + GCS rsync (`gsutil rsync -c -d`)
   - GitDagBundle 은 Composer 가 차단해 사용 불가 — 향후 지원 시 재검토
-- 상세: [[platform/airflow/11_DAG Bundles와 배포 전략]]
+- 상세: [[platform/airflow/deploy/5_DAG Bundles와 배포 전략]]
 
 ### 9. 메타데이터 DB
 
 - **관리**: Composer 3 이 Cloud SQL PostgreSQL 자동 관리
 - **핵심**: **20GB 이하 유지 필수** (그 이상이면 Composer 업그레이드 차단)
 - **Retention**: 90일 표준 (`airflow db cleanup`)
-- 상세: [[platform/airflow/5_Metadata DB 운영]], [[platform/airflow/13_Composer 3 환경 업그레이드 정책]]
+- 상세: [[platform/airflow/ops/2_Metadata DB 운영]], [[platform/airflow/ops/5_Composer 3 환경 업그레이드 정책]]
 
 ### 10. Provider 패키지 (Custom Operator)
 
@@ -112,7 +112,7 @@ Provider 패키지
 - **패키지**: `apache-airflow-providers-kakaoent-dataplatform`
 - **DE 사용**: `pip install` 후 `import` — 오픈소스 provider 와 동일
 - **PoC**: 완료 (dp-airflow-provider 저장소)
-- 상세: [[platform/airflow/7_3_공통 Custom Operator 제공 방안]], [[platform/airflow/7_4_DAG + dbt + Operator 3축 배포 통합]]
+- 상세: [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]], [[platform/airflow/deploy/3_DAG + dbt + Operator 3축 배포 통합]]
 
 ## PoC 통과 현황
 

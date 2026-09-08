@@ -14,7 +14,7 @@ updated: 2026-09-08
 
 > ## ❌ 결론: Composer 3 에서 DAG Bundles 는 **사용 불가**
 >
-> Composer 가 bundle 설정을 막아놓아 배포 방식은 **GCS bucket sync 만 가능** (PoC 확인 — [[PoC/02_dag_deployment]]).
+> Composer 가 bundle 설정을 막아놓아 배포 방식은 **GCS bucket sync 만 가능** (PoC 확인 — [[../PoC/02_dag_deployment]]).
 > 실제 배포 운영안(GitHub Actions → GCS sync)은 [[1_개요]] §4. 아래 DAG Bundles 내용은 **Self-managed 로 갈 경우 / Composer 가 향후 지원할 경우의 참고 자료**다.
 >
 > 기준: **Airflow 3 / Composer 3**.
@@ -197,7 +197,7 @@ Airflow UI에 bundle 이름 + commit hash 표시
 | Private IP Composer면 외부 Git 못 감 | Cloud NAT 또는 사내 Git이면 VPC peering / PSC                                                 |
 | Pull 실패 시                       | 직전 buffer 유지. 모니터링 + 알람 필수                                                              |
 | 큰 repo 초기 clone 느림              | 첫 셋업 시 몇 분 소요. 이후 incremental fetch                                                     |
-| requirements.txt 변경             | 여전히 Composer env update (수 분~십수 분). 의존성 변경 잦으면 Pod 이미지로 빼기 ([[4_Queue 라우팅과 Pod 스펙 설정]]) |
+| requirements.txt 변경             | 여전히 Composer env update (수 분~십수 분). 의존성 변경 잦으면 Pod 이미지로 빼기 ([[1_Queue 라우팅과 Pod 스펙 설정]]) |
 
 ## 4. 배포 시점 컨트롤 — Pull off + Push only 패턴
 
@@ -321,7 +321,7 @@ DAG가 망가지면 환경 전체 영향. **PR 단계에서 강제**:
 DAG 코드뿐 아니라 `requirements.txt` 같은 의존성도 deploy 대상:
 
 - Composer: PyPI 패키지 추가는 환경 update (수 분~십수 분 소요)
-- 잦은 의존성 변경은 운영 부담 → 가능하면 **Pod 이미지에 박아서 KubernetesExecutor로 분리** ([[4_Queue 라우팅과 Pod 스펙 설정]])
+- 잦은 의존성 변경은 운영 부담 → 가능하면 **Pod 이미지에 박아서 KubernetesExecutor로 분리** ([[1_Queue 라우팅과 Pod 스펙 설정]])
 - 옵션 (1), (2) 모두 동일하게 해당
 
 ## 6. 다이앤 환경 결정
@@ -353,6 +353,6 @@ DAG 코드뿐 아니라 `requirements.txt` 같은 의존성도 deploy 대상:
 ## 관련 문서
 
 - [[1_개요]]
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]]
-- [[6_Airflow 2 vs 3 비교]]
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]]
+- [[3_Airflow 2 vs 3 비교]]

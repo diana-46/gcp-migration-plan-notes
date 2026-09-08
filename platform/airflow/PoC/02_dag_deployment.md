@@ -132,5 +132,5 @@ gs://composer-prod-bucket/dags/
 ## 관련
 
 - [[README]] — PoC 인벤토리
-- [[../2_Cloud Composer vs Self-managed 비교]] — DAG 배포 비교 행
+- [[../research/1_Cloud Composer vs Self-managed 비교]] — DAG 배포 비교 행
 - [[01_airflow3_compat_grep]] — 호환성 grep 결과

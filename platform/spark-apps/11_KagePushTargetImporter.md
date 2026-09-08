@@ -150,7 +150,7 @@ df.filter(!col(KAGE_COL).contains(USER_UID))        // 헤더 줄 제거
 | # | 항목 | 비고 |
 |---|---|---|
 | ① | **UDF 안에서 Kage HTTP GET** | 재시도·타임아웃 처리 없음 |
-| ② | **Kage 는 카카오 서비스 — 이관 대상 아님** | **GCP → 사내망 연결(Interconnect/VPN) 가능 여부에 종속.** `[[2_Cloud Composer vs Self-managed 비교]]` 미해결 질문 #2 |
+| ② | **Kage 는 카카오 서비스 — 이관 대상 아님** | **GCP → 사내망 연결(Interconnect/VPN) 가능 여부에 종속.** `[[1_Cloud Composer vs Self-managed 비교]]` 미해결 질문 #2 |
 | ③ | 소스가 Hudi (`t_push_group`) | CDC 수집(BQ Sink) + BQ 전환에 종속 |
 | ④ | 파티션 `push_group_uid` 고카디널리티 | BQ 4,000 제한 → 클러스터링 |
 

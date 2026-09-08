@@ -11,9 +11,13 @@
 
 ```
 platform/                 "플랫폼을 무엇으로 어떻게 짓나" (팀 위키 '플랫폼 구성'과 1:1)
-├── airflow/              Composer 운영·비용·PoC (+ _archive/)
-│   ├── asset/            Airflow Asset 스케줄링 실측
-│   └── deploy/           Provider 배포 파이프라인·공유 Airflow 가이드
+├── 0_데이터 플랫폼 아키텍처.md   트랙 횡단 통합 아키텍처 (Athlon+Composer+dbt+DataHub)
+├── airflow/              Composer — 0_결론(결정)·1_개요(운영 가이드) (+ _archive/)
+│   ├── cost/             비용 실측 산정·DCU 과금 구조
+│   ├── ops/              Queue·메타DB·다이어트·권한·업그레이드·Terraform 구축
+│   ├── deploy/           배포 전반 — Provider 파이프라인·3축 통합·레포 인벤토리·DAG Bundles(불가)
+│   ├── research/         결정 근거 비교 (Composer vs Self-managed 등)
+│   └── asset/            Airflow Asset 스케줄링 실측
 ├── athlon/               ETL 플랫폼 전환 (+ PoC/)
 │   └── userlake/         userlake-worker 이관 (athlon 하위 기능)
 ├── dbt/                  dbt 검증·이관 규약

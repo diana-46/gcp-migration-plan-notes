@@ -302,7 +302,7 @@ HEAVY  = pod_config(memory='16Gi', cpu='8')     # 노드 점유 ~17GB
 # GPU / node_selector 기반 분리 — Composer 3 에선 사용 불가
 ```
 
-⚠ Step 4 PoC ([[PoC/04_worker_pool_queue]]) 의 K8sExecutor cold start 7~10분 함정 그대로 유효. 분 단위 task에는 프리셋 무의미 — Celery worker 사양 상향이 나음.
+⚠ Step 4 PoC ([[../PoC/04_worker_pool_queue]]) 의 K8sExecutor cold start 7~10분 함정 그대로 유효. 분 단위 task에는 프리셋 무의미 — Celery worker 사양 상향이 나음.
 
 #### 회의 메시지
 
@@ -425,6 +425,6 @@ spec:
 ## 관련 문서
 
 - [[1_개요]]
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[3_Executor 종류 및 비교]]
-- [[5_Metadata DB 운영]]
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[2_Executor 종류 및 비교]]
+- [[2_Metadata DB 운영]]

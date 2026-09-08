@@ -4,7 +4,7 @@
 > 1. **Actions UI → Python DAG** (authoring 모델 변경)
 > 2. **Centralized `airflow-dags` → 팀별 저장소** (org / 배포 모델 변경)
 >
-> 관련: [[platform/airflow/15_관리 레포 인벤토리]], [[platform/airflow/14_Composer 3 비용 구조]]
+> 관련: [[platform/airflow/deploy/4_관리 레포 인벤토리]], [[platform/airflow/cost/2_Composer 3 비용 구조]]
 
 ---
 
@@ -89,17 +89,17 @@ from airflow.providers.kakaoent.dataplatform.operators.loupe_kafka_batch import 
 ### 지금 athlon 은 DB 기반 스케줄링
 
 - MySQL 에 저장된 DAG 정의 / 스케줄 상태를 매 분·초 폴링
-- 측정치: **300~900 queries/minute** ([[platform/airflow/15_관리 레포 인벤토리]] § athlon DB 한계)
+- 측정치: **300~900 queries/minute** ([[platform/airflow/deploy/4_관리 레포 인벤토리]] § athlon DB 한계)
 - DAG / 팀 수 늘어날수록 부하 선형 증가 → DB CPU / 네트워크 / 잠금 경합
 - SPOF (Single Point of Failure) — athlon DB 이슈 시 모든 팀 영향
 
 ### GCP Composer 요금 모델
 
-Composer 3 요금 = **DCU (vCPU + RAM 시간)** ([[platform/airflow/14_Composer 3 비용 구조]]):
+Composer 3 요금 = **DCU (vCPU + RAM 시간)** ([[platform/airflow/cost/2_Composer 3 비용 구조]]):
 
 - Scheduler / DAG processor / triggerer 는 **24×7 상주** → floor cost 발생 (DAG 0 개여도 ~$200-300/월)
 - DAG 밀도·파싱 부하가 그대로 **스케줄러 스펙 = 요금**
-- 관련: [[platform/airflow/7_1_실제 스펙 산정]] (실측 스펙 산정), [[platform/airflow/7_2_리소스 다이어트 포인트]] (다이어트 포인트)
+- 관련: [[platform/airflow/cost/1_실제 스펙 산정]] (실측 스펙 산정), [[platform/airflow/ops/3_리소스 다이어트 포인트]] (다이어트 포인트)
 
 ### 팀별 저장소가 두 축을 동시에 해결
 
@@ -249,7 +249,7 @@ Phase 1 확산 시점부터 팀 별 Composer 인스턴스로 분리.
 
 ### Trade-off
 
-- Floor cost × 팀 수 발생 (팀당 ~$200-300/월, 관련: [[platform/airflow/14_Composer 3 비용 구조]])
+- Floor cost × 팀 수 발생 (팀당 ~$200-300/월, 관련: [[platform/airflow/cost/2_Composer 3 비용 구조]])
 - 팀 수 늘어나면 floor 총합 증가 → 하지만 blast radius 격리 · 요금 visibility 이득이 더 큼
 - 공용 리소스 (예: 사내 DataHub, GAR provider registry) 는 그대로 공용 유지
 
@@ -279,7 +279,7 @@ Kpayment 팀:
 - 이후엔 팀 자율. 오히려 조율 부담 감소.
 
 **"공용 helper / 상수는 어디에"**
-- `apache-airflow-providers-kakaoent-dataplatform` 패키지에 (관련: [[platform/airflow/7_3_공통 Custom Operator 제공 방안]])
+- `apache-airflow-providers-kakaoent-dataplatform` 패키지에 (관련: [[platform/airflow/deploy/_archive/공통 Custom Operator 제공 방안]])
 - 팀 저장소는 얇게 유지
 
 **"cross-team dependency 는"**
@@ -289,9 +289,9 @@ Kpayment 팀:
 
 ## 관련 문서
 
-- [[platform/airflow/15_관리 레포 인벤토리]] — 3-layer 저장소 구조 + athlon DB 한계
-- [[platform/airflow/14_Composer 3 비용 구조]] — DCU 요금 모델
-- [[platform/airflow/7_1_실제 스펙 산정]] — 리소스 실측
-- [[platform/airflow/7_2_리소스 다이어트 포인트]] — 다이어트 축들
-- [[platform/airflow/11_DAG Bundles와 배포 전략]] — 배포 전략
+- [[platform/airflow/deploy/4_관리 레포 인벤토리]] — 3-layer 저장소 구조 + athlon DB 한계
+- [[platform/airflow/cost/2_Composer 3 비용 구조]] — DCU 요금 모델
+- [[platform/airflow/cost/1_실제 스펙 산정]] — 리소스 실측
+- [[platform/airflow/ops/3_리소스 다이어트 포인트]] — 다이어트 축들
+- [[platform/airflow/deploy/5_DAG Bundles와 배포 전략]] — 배포 전략
 - [[platform/athlon/8_배포 시 유의할 점]] — 실전 배포 함정

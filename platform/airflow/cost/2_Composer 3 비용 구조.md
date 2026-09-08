@@ -16,7 +16,7 @@ updated: 2026-06-19
 
 > Cloud Composer 3 의 **청구 단위 4축** + DCU 의 정체 + Composer 2 와의 차이 + 절감 옵션의 제약. 비용 견적의 reference 노트.
 >
-> 실제 산정 사례는 [[7_1_실제 스펙 산정]], 일반론 비교는 [[_archive/7_Composer 비용]] 참조.
+> 실제 산정 사례는 [[1_실제 스펙 산정]], 일반론 비교는 [[../_archive/7_Composer 비용]] 참조.
 
 ## 한 줄 요약
 
@@ -166,8 +166,8 @@ Worker (min):  2 vCPU + 8 GB   = 10 DCU/h
 |---|---|---|
 | **Worker autoscale min ↓** | floor 자체 감소 | min=1 까지 가능. 단 cold start 영향 |
 | **Worker 사양 다운사이즈** | DCU/h 직접 감소 | task 당 메모리 필요량 검증 후 |
-| **Deferrable sensor → Triggerer** | Worker 점유 시간 ↓ → autoscale 더 잘 작동 | [[7_2_리소스 다이어트 포인트]] |
-| **메타DB cleanup** | Database storage 청구 ↓ + 환경 크기 다운 가능 | [[5_Metadata DB 운영]] |
+| **Deferrable sensor → Triggerer** | Worker 점유 시간 ↓ → autoscale 더 잘 작동 | [[3_리소스 다이어트 포인트]] |
+| **메타DB cleanup** | Database storage 청구 ↓ + 환경 크기 다운 가능 | [[2_Metadata DB 운영]] |
 | **DAG 분리 (DAG processor)** | parsing 부하 분산 → DAG processor 사양 ↓ | DAG 수 ↑ 시 |
 | **GCS lifecycle (로그 archive)** | Environment storage ↓ | Nearline / Coldline 전환 |
 | **dev 환경 야간 종료** | dev 환경의 DCU 절감 | scheduler 로 환경 stop / start |
@@ -181,7 +181,7 @@ Worker (min):  2 vCPU + 8 GB   = 10 DCU/h
 | **자체 GKE 노드 풀** | ❌ 불가 | tenant project 의 GKE 라 사용자 불가능 |
 | **K8s autoscaler 직접 튜닝** | ❌ 불가 | Composer 가 추상화 |
 
-→ Spot/CUD 가 불가능한 게 GCE/GKE 옵션 대비 **30~70% 비용 격차의 원천** ([[7_1_실제 스펙 산정]] 참조).
+→ Spot/CUD 가 불가능한 게 GCE/GKE 옵션 대비 **30~70% 비용 격차의 원천** ([[1_실제 스펙 산정]] 참조).
 
 ## 7. 견적 산출 워크플로
 
@@ -218,7 +218,7 @@ DCU/h = Σ (각 컴포넌트의 vCPU + GB RAM)
 - 보수적 견적은 worker max 기준
 - 실제 청구는 worker autoscale 평균 기준
 
-→ 우리 산정 사례는 [[7_1_실제 스펙 산정]] 참조.
+→ 우리 산정 사례는 [[1_실제 스펙 산정]] 참조.
 
 ## 8. 청구 모니터링 / 검증
 
@@ -243,10 +243,10 @@ DCU/h = Σ (각 컴포넌트의 vCPU + GB RAM)
 
 ## 관련 문서
 
-- [[_archive/7_Composer 비용]] — 일반론 (Composer 3 vs Self-managed 큰 그림)
-- [[7_1_실제 스펙 산정]] — 우리 환경의 실제 견적 (옵션 A/B 매트릭스)
+- [[../_archive/7_Composer 비용]] — 일반론 (Composer 3 vs Self-managed 큰 그림)
+- [[1_실제 스펙 산정]] — 우리 환경의 실제 견적 (옵션 A/B 매트릭스)
 - [[1_개요#6. 비용]] — 사내 사용량 기반 비용 비교
-- [[13_Composer 3 환경 업그레이드 정책]] — 업그레이드 시 DB 20GB 제한 관련
+- [[5_Composer 3 환경 업그레이드 정책]] — 업그레이드 시 DB 20GB 제한 관련
 
 ## 공식 출처
 

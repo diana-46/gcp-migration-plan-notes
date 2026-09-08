@@ -83,9 +83,9 @@ Cloud Composer 3 는 시스템 안정성을 위해 Google 이 진행하는 자�
 
 ## 관련 문서
 
-- [[5_Metadata DB 운영]] — DB 20GB 제한 대응 cleanup 정책
-- [[7_2_리소스 다이어트 포인트]] — deferrable operator 권장 (24h 유예 한도)
-- [[PoC/09_snapshot_and_rollback]] — 실측 PoC
+- [[2_Metadata DB 운영]] — DB 20GB 제한 대응 cleanup 정책
+- [[3_리소스 다이어트 포인트]] — deferrable operator 권장 (24h 유예 한도)
+- [[../PoC/09_snapshot_and_rollback]] — 실측 PoC
 
 ## 공식 출처
 

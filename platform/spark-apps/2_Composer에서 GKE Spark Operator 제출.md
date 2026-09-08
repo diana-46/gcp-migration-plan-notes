@@ -352,4 +352,4 @@ class GKESparkKubernetesOperator(GKEOperatorMixin, SparkKubernetesOperator):
 
 - 코드: `berrizdata-airflow-dags` → `dags/berriz/berriz_0900_spark_submit_check.py`
 - [[1_사용중인_spark_job]] — 이관 대상 Spark 앱 인벤토리
-- [[platform/airflow/8_Composer 권한 및 인증]] — Composer 의 3계층 권한 모델
+- [[platform/airflow/ops/4_Composer 권한 및 인증]] — Composer 의 3계층 권한 모델

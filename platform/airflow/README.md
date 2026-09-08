@@ -1,7 +1,7 @@
 # 스케줄러 — 컨텍스트
 
 > 이 폴더는 **GCP 이관 시 Airflow를 어떻게 운영할지** 결정하기 위한 리서치 자료를 모은다.
-> 결론 노트는 [[1_개요]].
+> 결정 진입점은 [[0_결론]], 운영 가이드는 [[1_개요]]. 하위: cost/(비용 실측·과금 구조) · ops/(운영 상세) · deploy/(배포 전반) · research/(결정 근거 비교) · PoC/ · asset/ · _archive/
 
 ---
 
@@ -13,7 +13,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 2. **Self-managed Airflow on GKE** 로 직접 띄울 것인가
 
 부수적으로 따라오는 결정:
-- **Airflow 버전 선택** (2.x 유지 / 3.x로 점프) — [[6_Airflow 2 vs 3 비교]]
+- **Airflow 버전 선택** (2.x 유지 / 3.x로 점프) — [[3_Airflow 2 vs 3 비교]]
 - Executor 선택 (CeleryKubernetes / Kubernetes 단독 등)
 - Worker queue 분리 전략
 - Metadata DB 운영 방식
@@ -48,7 +48,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 ### Confluence
 
 - **DP space — 스케줄러 폴더**: https://kakaoent.atlassian.net/wiki/spaces/DP/folder/5067145573
-  - 이 폴더의 페이지들은 [[2_Cloud Composer vs Self-managed 비교]], [[3_Executor 종류 및 비교]], [[4_Queue 라우팅과 Pod 스펙 설정]], [[5_Metadata DB 운영]]로 import 완료
+  - 이 폴더의 페이지들은 [[1_Cloud Composer vs Self-managed 비교]], [[2_Executor 종류 및 비교]], [[1_Queue 라우팅과 Pod 스펙 설정]], [[2_Metadata DB 운영]]로 import 완료
 
 ### 관련 코드 레포 (로컬 경로)
 
@@ -83,7 +83,7 @@ GCP로 데이터플랫폼을 이관할 때, Airflow 스케줄러를:
 
 이 폴더에서만 추가로 지키는 규칙:
 
-- **비교 노트는 항상 동일한 평가 축으로**: 운영 부담 / 자유도 / Queue 분리 / 비용 / 업그레이드 / GCP 통합 / 마이그레이션 속도. ([[2_Cloud Composer vs Self-managed 비교]] 의 결정 기준 표 참고)
+- **비교 노트는 항상 동일한 평가 축으로**: 운영 부담 / 자유도 / Queue 분리 / 비용 / 업그레이드 / GCP 통합 / 마이그레이션 속도. ([[1_Cloud Composer vs Self-managed 비교]] 의 결정 기준 표 참고)
 - **PoC 항목은 [[1_개요]] 의 체크리스트에 누적**해서 적는다. 각 자료 노트에 흩어놓지 않는다.
 - **비용 추정은 USD/월 단위로 통일**. KRW 환산은 부가 정보.
 

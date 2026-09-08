@@ -37,9 +37,9 @@
 | 3 | **PyPI 자체 패키지 install** | ✅ 완료 | [[03_custom_operator_pypi]] |
 | 4 | **Queue / Worker / Pool 패턴** | ✅ 완료 | [[04_worker_pool_queue]] |
 | 5 | **모니터링 / 알림 / callback** | ⬜ 대기 | `05_monitoring_alerts.md` |
-| 6 | **인증 / 권한 (Workspace + IAM + Airflow RBAC)** | ✅ 완료 | [[../8_Composer 권한 및 인증]] 검증된 사실 반영 |
-| 7 | **Pod 프리셋 (executor_config / pod_override)** | ✅ 완료 | [[../4_Queue 라우팅과 Pod 스펙 설정#3-4. PoC 검증 결과 Composer 3 Airflow 3.1.7]] 에 직접 반영 |
-| 8 | **Deferrable Sensor 동작 검증** (Traditional vs Triggerer) | 🟡 진행 중 | [[08_deferrable_sensor_test]] — [[../7_2_리소스 다이어트 포인트]] 의 전제 검증 |
+| 6 | **인증 / 권한 (Workspace + IAM + Airflow RBAC)** | ✅ 완료 | [[../ops/4_Composer 권한 및 인증]] 검증된 사실 반영 |
+| 7 | **Pod 프리셋 (executor_config / pod_override)** | ✅ 완료 | [[../ops/1_Queue 라우팅과 Pod 스펙 설정#3-4. PoC 검증 결과 Composer 3 Airflow 3.1.7]] 에 직접 반영 |
+| 8 | **Deferrable Sensor 동작 검증** (Traditional vs Triggerer) | 🟡 진행 중 | [[08_deferrable_sensor_test]] — [[../ops/3_리소스 다이어트 포인트]] 의 전제 검증 |
 | 9 | **환경 Snapshot 범위 + 업그레이드 롤백** | 🟡 진행 중 | [[09_snapshot_and_rollback]] — 백업 전략 + 롤백 SOP |
 | 10 | **apache-airflow-providers 규격 패키지** | 🟡 진행 중 | [[10_provider_package_test]] — UI 자동 등록 / Connection type 자동 발견 검증 |
 
@@ -189,7 +189,7 @@ wheel build → twine upload → AR push
 
 ### Step 6. 인증 / 권한 — Google Workspace + GCP IAM + Airflow RBAC ✅ 완료
 
-> 상세 결과: [[../8_Composer 권한 및 인증]]
+> 상세 결과: [[../ops/4_Composer 권한 및 인증]]
 
 **검증 질문**: Composer 3 + Airflow 3.1.7의 권한 모델이 어떻게 동작하나? 사내 LDAP을 Workspace로 대체하면서 권한 관리도 깔끔히 굴릴 수 있나?
 
@@ -262,9 +262,9 @@ wheel build → twine upload → AR push
 ## 관련 노트
 
 - [[../1_개요]] — 스케줄러 메인 결정
-- [[../2_Cloud Composer vs Self-managed 비교]] — 사내 셋업 호환성 분석 (Section "현 사내 Airflow 셋업 → Composer 3 호환성")
-- [[../4_Queue 라우팅과 Pod 스펙 설정]] — Queue / Pod 패턴
-- [[../8_Composer 권한 및 인증]] — 인증 관련
+- [[../research/1_Cloud Composer vs Self-managed 비교]] — 사내 셋업 호환성 분석 (Section "현 사내 Airflow 셋업 → Composer 3 호환성")
+- [[../ops/1_Queue 라우팅과 Pod 스펙 설정]] — Queue / Pod 패턴
+- [[../ops/4_Composer 권한 및 인증]] — 인증 관련
 - [[platform/airflow/asset/11_Airflow Asset과 Dataset]] — Airflow 3 Asset (Step 4~5 에 활용)
 - [[../../athlon/PoC/README]] — 별도 PoC (dbt / Asset-Centric / 패러다임 검증) — **본 PoC 통과 후** 진행
 

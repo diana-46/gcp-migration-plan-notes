@@ -18,7 +18,7 @@ updated: 2026-09-08
 
 > Composer 3 환경에서 운영할 **3개 자산 (Custom Operator / dbt Project / Airflow DAG)** 의 배포 전략 통합 그림.
 >
-> 각 자산의 detail 은 별개 노트에 정리되어 있고 ([[7_3_공통 Custom Operator 제공 방안]] / [[platform/athlon/PoC/02_dbt_render_in_composer]] · [[platform/athlon/PoC/03_bq_dbt_run_in_composer]] / [[11_DAG Bundles와 배포 전략]]), 본 문서는 **세 가지를 한 장에 묶어** 통합 그림 + 의사결정 인덱스 역할.
+> 각 자산의 detail 은 별개 노트에 정리되어 있고 ([[공통 Custom Operator 제공 방안]] / [[platform/athlon/PoC/02_dbt_render_in_composer]] · [[platform/athlon/PoC/03_bq_dbt_run_in_composer]] / [[5_DAG Bundles와 배포 전략]]), 본 문서는 **세 가지를 한 장에 묶어** 통합 그림 + 의사결정 인덱스 역할.
 
 ## 결론 먼저
 
@@ -26,9 +26,9 @@ updated: 2026-09-08
 >
 > | Layer | 자산 | 배포 메커니즘 | 결정된 노트 |
 > |---|---|---|---|
-> | 1 | Custom Operator 패키지 | AR Python repo (`pip install`) + SemVer | [[7_3_공통 Custom Operator 제공 방안]] |
+> | 1 | Custom Operator 패키지 | AR Python repo (`pip install`) + SemVer | [[공통 Custom Operator 제공 방안]] |
 > | 2 | dbt Project | DAG repo 안 `dbt_projects/` 동봉 + CI 가 `manifest.json` 생성 → GCS | [[platform/athlon/PoC/02_dbt_render_in_composer]] · [[platform/athlon/PoC/03_bq_dbt_run_in_composer]] |
-> | 3 | Airflow DAG | GitDagBundle + Pull off + Jenkins push 트리거 | [[11_DAG Bundles와 배포 전략]] |
+> | 3 | Airflow DAG | GitDagBundle + Pull off + Jenkins push 트리거 | [[5_DAG Bundles와 배포 전략]] |
 >
 > Cosmos 의 `DbtTaskGroup` 이 layer 2 와 3 의 접점, Provider Package 의 `import` 가 layer 1 과 3 의 접점.
 
@@ -183,13 +183,13 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 | stg | `==X.Y.Z-rc` | `release` 브랜치 manifest | `release` — merge 시 CI 자동 배포 |
 | prod | `==X.Y.Z` (stable) | `production` tag manifest | `production` — 수동 승인 후 CI 배포 |
 
-환경 분리의 물리적 방법은 **GCP project 단위 Composer 환경 분리** ([[11_DAG Bundles와 배포 전략]] §6 결정 인용).
+환경 분리의 물리적 방법은 **GCP project 단위 Composer 환경 분리** ([[5_DAG Bundles와 배포 전략]] §6 결정 인용).
 
 ## 8. 각 Layer 의 의사결정 인덱스
 
 세 노트에 흩어져 있는 결정 사항 한곳에 모음:
 
-### Layer 1 — Operator 패키지 ([[7_3_공통 Custom Operator 제공 방안]])
+### Layer 1 — Operator 패키지 ([[공통 Custom Operator 제공 방안]])
 
 - ✅ Internal Provider Package + GCP Artifact Registry (Python repo)
 - ✅ flat layout, 패키지명 `kakaoent_airflow`
@@ -208,9 +208,9 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 - ✅ BQ 이관 시 adapter 만 교체 (`dbt-trino` → `dbt-bigquery`)
 - ⚠️ Layer 2 동봉 vs 분리 — 미확정 (§5 참조)
 
-### Layer 3 — Airflow DAG ([[11_DAG Bundles와 배포 전략]])
+### Layer 3 — Airflow DAG ([[5_DAG Bundles와 배포 전략]])
 
-- ✅ 배포 = **GCS sync** — DAG Bundles 는 Composer 가 차단해 사용 불가 ([[PoC/02_dag_deployment]])
+- ✅ 배포 = **GCS sync** — DAG Bundles 는 Composer 가 차단해 사용 불가 ([[../PoC/02_dag_deployment]])
 - ✅ Push only 패턴: PR merge → CI (import test) → `gsutil rsync`
 - ✅ 환경 분리는 GCP project 단위 Composer 환경
 - ✅ Git deploy key/PAT → Secret Manager, 환경 SA 에 secretAccessor
@@ -218,7 +218,7 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 
 ## 9. 미확정 / 후속 결정
 
-- [ ] **Layer 2 동봉 vs 분리** — DAG repo 안 `dbt_projects/` 동봉 (atomic) vs dbt repo 분리 (musicdata 팀 패턴, 권한 분리) — 도메인별로 다르게 가도 OK. **미결의 유일본은 [[15_관리 레포 인벤토리]] §6.1** — 결정되면 그쪽을 갱신하고 여기는 링크만 유지
+- [ ] **Layer 2 동봉 vs 분리** — DAG repo 안 `dbt_projects/` 동봉 (atomic) vs dbt repo 분리 (musicdata 팀 패턴, 권한 분리) — 도메인별로 다르게 가도 OK. **미결의 유일본은 [[4_관리 레포 인벤토리]] §6.1** — 결정되면 그쪽을 갱신하고 여기는 링크만 유지
 - [ ] **dbt manifest 의 publish 주체** — Layer 2 의 CI 가 직접 GCS 에 올릴지, DAG repo 의 CI 가 dbt repo 를 fetch 해서 같이 올릴지
 - [ ] **dbt-bigquery 의존성 위치** — Composer PyPI 옵션 (전역) vs KubernetesPodOperator image (격리)
 - [ ] **Operator 패키지의 dbt-airflow 통합 helper** — Cosmos 의 `DbtTaskGroup` 보일러플레이트를 Layer 1 에 helper 로 뽑을지 (예: `kakaoent_airflow.dbt.cosmos_dbt_task_group(...)`)
@@ -227,11 +227,11 @@ kakaoent-airflow-providers/     ← Layer 1: Operator 패키지 (단일 repo)
 
 ## 10. 관련 문서
 
-- [[7_3_공통 Custom Operator 제공 방안]] — Layer 1 detail
+- [[공통 Custom Operator 제공 방안]] — Layer 1 detail
 - [[platform/athlon/PoC/02_dbt_render_in_composer]] — Layer 2 렌더링 검증 (Cosmos 패턴)
 - [[platform/athlon/PoC/03_bq_dbt_run_in_composer]] — Layer 2 BQ 실제 실행 검증
-- [[11_DAG Bundles와 배포 전략]] — Layer 3 detail (옵션 (2) + Pull off 결정)
-- [[7_2_리소스 다이어트 포인트]] — sensor → deferrable 등 코드 레벨 다이어트 (orthogonal)
-- [[2_Cloud Composer vs Self-managed 비교]]
-- [[4_Queue 라우팅과 Pod 스펙 설정]] — Pod 이미지로 의존성 격리할 때
-- [[13_Composer 3 환경 업그레이드 정책]]
+- [[5_DAG Bundles와 배포 전략]] — Layer 3 detail (옵션 (2) + Pull off 결정)
+- [[3_리소스 다이어트 포인트]] — sensor → deferrable 등 코드 레벨 다이어트 (orthogonal)
+- [[1_Cloud Composer vs Self-managed 비교]]
+- [[1_Queue 라우팅과 Pod 스펙 설정]] — Pod 이미지로 의존성 격리할 때
+- [[5_Composer 3 환경 업그레이드 정책]]
