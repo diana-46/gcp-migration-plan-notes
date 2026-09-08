@@ -10,12 +10,20 @@
 ## 구조 한눈에 (아래 순서 = 권장 읽기 순서)
 
 ```
-reports → scheduler · asset · deploy   (플랫폼: Airflow/Composer)
-        → athlon · dbt · presto-to-bigquery   (ETL·쿼리 전환)
-        → userlake · spark-apps   (워커·앱 이관)
-        → berriz   (서비스별 실행)
-        → shared   (대외 설명자료)
-wip = raw 작업장 (스크랩 제외) · attachments = 이미지
+platform/                 "플랫폼을 무엇으로 어떻게 짓나" (팀 위키 '플랫폼 구성'과 1:1)
+├── airflow/              Composer 운영·비용·PoC (+ _archive/)
+│   ├── asset/            Airflow Asset 스케줄링 실측
+│   └── deploy/           Provider 배포 파이프라인·공유 Airflow 가이드
+├── athlon/               ETL 플랫폼 전환 (+ PoC/)
+│   └── userlake/         userlake-worker 이관 (athlon 하위 기능)
+├── dbt/                  dbt 검증·이관 규약
+│   └── presto-to-bigquery/  쿼리 변환 실측 검증
+└── spark-apps/           Spark 배치 앱의 GKE 이관
+migration/                서비스별 이관 실행 (팀 위키 '데이터 이관'과 1:1)
+└── berriz/
+docs/                     사람 대상 산출물
+├── reports/  (보고)  └── shared/  (DE·매니저 설명자료)
+wip/ = raw 작업장 (스크랩 제외) · attachments/ = 이미지
 ```
 
 각 폴더 진입점 = 숫자 최저 노트(`0_결론`/`1_개요`). **폴더 내 수치·결론이 충돌하면 진입점 노트가 대표다.**
@@ -32,7 +40,7 @@ frontmatter `status` 4종: `wip`(제외) / `draft`(증언, 기본값 — frontma
 
 ## 함정 맵 (인용 시 주의)
 
-- `userlake/2·3·12·13·14` (Spark Connect 컴퓨트): **Dataproc 전제 검토·실측 — 컴퓨트 선택 미정, 확정 인용 금지.** 3은 archived 구판(14가 비용 대표)
+- `platform/athlon/userlake/2·3·12·13·14` (Spark Connect 컴퓨트): **Dataproc 전제 검토·실측 — 컴퓨트 선택 미정, 확정 인용 금지.** 3은 archived 구판(14가 비용 대표)
 - 비용 수치는 basis(정가 추정 usage / 실측 measured / 약정 committed)를 병기해야 인용 가능
 
 ## 이 레포에서 작업하는 LLM 세션의 행동 규칙

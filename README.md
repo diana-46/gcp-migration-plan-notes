@@ -36,21 +36,21 @@
 ## 인덱스
 
 각 폴더의 entry point는 `README.md`(컨텍스트)와 숫자가 가장 낮은 결론 노트(`0_결론` 또는 `1_개요`).
-인덱스 표 순서 = 권장 읽기 순서 (플랫폼 구성 → 전환 → 워커/앱 → 서비스 실행 → 대외 공유).
+최상단 3분류: `platform/`(플랫폼 구성) · `migration/`(서비스별 이관 실행) · `docs/`(사람 대상 산출물) — 팀 위키 아웃라인과 1:1. 표 순서 = 권장 읽기 순서.
 
 | 폴더 | 다루는 것 | 컨텍스트 |
 |---|---|---|
-| `reports/` | GCP 이관 전체 보고, Composer 인프라 보고 | [[0_GCP 이관 보고]] |
-| `scheduler/` | Airflow 운영 (Composer vs Self-managed), 비용·권한·배포, Composer 3 신규 환경 구축(Terraform), PoC | [[scheduler/README\|README]] |
-| `asset/` | Airflow 3 Asset scheduling 실전 (실측 + 제약 + 3.2/3.3 개선 + MDL aligning) | [[asset/README\|README]] |
-| `deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[deploy/README\|README]] |
-| `athlon/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[athlon/README\|README]] |
-| `dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[dbt/README\|README]] |
-| `presto-to-bigquery/` | Presto→BQ 함수매핑·함정 케이스 실측 검증 | [[presto-to-bigquery/README\|README]] |
-| `userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트(미정)·다운사이즈·비용 | [[userlake/README\|README]] |
-| `spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[spark-apps/README\|README]] |
-| `berriz/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[berriz/README\|README]] |
-| `shared/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[shared/README\|README]] |
+| `docs/reports/` | GCP 이관 전체 보고, Composer 인프라 보고 | [[0_GCP 이관 보고]] |
+| `platform/airflow/` | Airflow 운영 (Composer vs Self-managed), 비용·권한·배포, Composer 3 신규 환경 구축(Terraform), PoC | [[platform/airflow/README\|README]] |
+| `platform/airflow/asset/` | Airflow 3 Asset scheduling 실전 (실측 + 제약 + 3.2/3.3 개선 + MDL aligning) | [[platform/airflow/asset/README\|README]] |
+| `platform/airflow/deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[platform/airflow/deploy/README\|README]] |
+| `platform/athlon/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[platform/athlon/README\|README]] |
+| `platform/athlon/userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트(미정)·다운사이즈·비용 | [[platform/athlon/userlake/README\|README]] |
+| `platform/dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[platform/dbt/README\|README]] |
+| `platform/dbt/presto-to-bigquery/` | Presto→BQ 함수매핑·함정 케이스 실측 검증 | [[platform/dbt/presto-to-bigquery/README\|README]] |
+| `platform/spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[platform/spark-apps/README\|README]] |
+| `migration/berriz/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[migration/berriz/README\|README]] |
+| `docs/shared/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[docs/shared/README\|README]] |
 | `wip/` | raw 작업장 — **팀 위키 스크랩 제외.** 정리되면 주제 폴더로 승격 | [[wip/README\|README]] |
 | `attachments/` | 이미지·첨부 모음 | — |
 

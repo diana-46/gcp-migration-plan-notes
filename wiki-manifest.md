@@ -27,7 +27,7 @@ exclude:
   - "attachments/**"     # 이미지·첨부
 
 pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다
-  - "userlake/2·3·12·13·14 (Spark Connect 컴퓨트): Dataproc Serverless 전제 검토·실측 —
+  - "platform/athlon/userlake/2·3·12·13·14 (Spark Connect 컴퓨트): Dataproc Serverless 전제 검토·실측 —
      컴퓨트 선택이 미정으로 돌아가 재검토 중. 확정 인용 금지 (3은 archived 구판, 14가 비용 대표)"
   - "결정 변경(2026-09-08): Spark 백필·재처리도 GKE Spark Operator로 일원화, Dataproc Serverless 미사용
      (모니터링 일원화) — 팀 위키 TDR-006의 '백필 전용 병행' 조항과 상충, _triage 이의 대상"
@@ -39,7 +39,7 @@ pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거�
 wip/2026-09-08 커넥터 삽질.md      ← 수집 제외 (raw)
         │ 내용이 정리되면 주제 폴더로 이동
         ▼
-scheduler/17_커넥터 검토.md          ← draft: 증언으로 수집, 참고용
+platform/airflow/17_커넥터 검토.md          ← draft: 증언으로 수집, 참고용
         │ 결론이 확정되면 status만 변경
         ▼
 같은 파일, status: final              ← confirmed: 결론 인용 가능
