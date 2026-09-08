@@ -148,7 +148,7 @@ gcloud composer environments storage logs read <env-name> \
 
 ## 실측 결과 (2026-06-04, Composer dev)
 
-> 스크린샷 → 텍스트 전환 (2026-09-08, 이미지 미사용 정책). 동일 `TimeDeltaSensor`(delta=20분) 2개 병렬 실행 비교.
+> 동일 `TimeDeltaSensor`(delta=20분) 2개 병렬 실행 비교.
 
 - **태스크 상태**: `1_traditional_sensor` = **Running** 유지 (워커 점유, Try 1) / `2_deferrable_sensor` = 시작 ~1초 만에 **Deferred** 전환 (Try 1).
 - **traditional 워커 로그**: 워커 프로세스가 **1분마다** `Checking if the delta has elapsed (base_time=…, delta=0:20:00)` — 20분 내내 워커에서 poke 반복. 직접 워커에서 실행하는 구조.

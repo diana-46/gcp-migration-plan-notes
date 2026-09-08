@@ -14,7 +14,7 @@ created: 2026-06-28
 ## 0. 결론
 
 > `core/util/filerw` 의 추상화에 **`GCS` 타입 1개 추가하는 것이 본질**.
-> 작업량 **3~4주 (16~22일, §6 상세 산정 — 정정 R3)** — athlon 전체에서 가장 영향 범위 넓음 (모든 stage 의 결과 파일 경로 의존).
+> 작업량 **3~4주 (16~22일, §6 상세 산정)** — athlon 전체에서 가장 영향 범위 넓음 (모든 stage 의 결과 파일 경로 의존).
 > 가장 미묘한 3가지:
 > 1. **GCS 는 atomic rename 없음** — `renameFile()` 의 atomic 가정에 의존하는 stage (Spark 결과 finalize 등) 가 깨질 수 있음
 > 2. **GCS 는 mtime 없음** — `touchRecursively()` 의미가 사라짐 (callers 확인 필요)
@@ -255,7 +255,7 @@ hadoop:
 | build.gradle.kts 의존성 추가 | 0.5일 |
 | **합계** | **16~22일 (3~4주)** |
 
-> api 의 raw Hadoop FS 마이그레이션 + atomic rename 회귀 검증을 포함한 산정 (정정 R3).
+> api 의 raw Hadoop FS 마이그레이션 + atomic rename 회귀 검증을 포함한 산정.
 
 ---
 

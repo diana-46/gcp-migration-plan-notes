@@ -36,7 +36,7 @@ frontmatter `status` 4종: `wip`(제외) / `draft`(증언, 기본값 — frontma
 
 - ETL: athlon(neptune) → **dbt** / 쿼리 엔진: presto → **BigQuery** / 스케줄러: **Cloud Composer 3**
 - CDC 수집: **Debezium → Kafka → BigQuery Sink Connector** (Datastream 기각 — 수집 트랙 결정)
-- Spark 런타임: **GKE Spark Operator 일원화** — 백필·재처리 포함, Dataproc Serverless 미사용 ([[corrections]] R4 — 팀 위키 TDR-006의 "백필 병행" 조항보다 이 선언이 최신)
+- Spark 런타임: **GKE Spark Operator 일원화** — 백필·재처리 포함, Dataproc Serverless 미사용 (팀 위키 TDR-006의 "백필 병행" 조항보다 이 선언이 최신)
 
 ## 함정 맵 (인용 시 주의)
 
@@ -52,4 +52,4 @@ frontmatter `status` 4종: `wip`(제외) / `draft`(증언, 기본값 — frontma
 5. 결론과 본문 수치가 어긋나는 수정을 했다면 결론(진입점 노트)까지 함께 갱신한다 — 결론만 인용될 때 낡은 값이 퍼진다.
 6. **이미지 붙여넣기 금지** — 스크린샷 내용(UI 상태·로그·수치)은 본문 텍스트로 옮겨 적는다. 다이어그램은 mermaid 코드블록 우선, 발표용 대형 다이어그램만 HTML로 `docs/` 하위에 (HTML은 스크랩 제외이므로 요지를 노트 본문에 병기).
 7. **푸시 전 검사** — 기계 검사는 `python3 .github/scripts/vault_lint.py` (push 시 CI에서도 자동 실행), 내용 검사(기존 노트와의 충돌·압축/합병 후보)는 `/vault-review` 실행.
-8. **틀린 서술을 고칠 때** — "왜 바뀌었나"는 본문에 쓰지 말고 **`corrections.md`에 R# 등록**, 본문은 현재형 서술 + `(정정 R#)` 각주만. 미결 상태 표시(⚠️ 재검토 필요)는 이력이 아니므로 본문에 남긴다.
+8. **틀린 서술을 고칠 때** — **처음부터 그렇게 쓰인 것처럼 현재형으로 고쳐 쓴다.** 수정 이력·정정 주석·날짜 딱지를 본문에 남기지 않는다 (이력은 git 이 보존, 내용 검증은 팀 위키 게이트가 수행). 미결 상태 표시(⚠️ 재검토 필요, 미정)는 이력이 아니라 현재 상태이므로 남긴다.

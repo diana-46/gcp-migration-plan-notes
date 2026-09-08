@@ -7,7 +7,7 @@ tags:
   - asset
   - dataset
 created: 2026-05-14
-updated: 2026-09-08   # asset 트랙 편입 (구 scheduler/9)
+updated: 2026-09-08
 ---
 
 # Airflow Asset과 Dataset (진화)

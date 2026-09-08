@@ -14,7 +14,7 @@ updated: 2026-09-08
 
 # 다중 Airflow 환경에 공통 Custom Operator 제공 방안
 
-> ✅ **승계 (2026-09-08)**: 이 검토의 확정 설계·실행 절차는 [[0_Airflow Provider 배포 파이프라인 설계]] · [[1_Airflow Provider 배포 셋업 런북]] (deploy/)이 대표. 본 문서는 방안 비교 이력으로 보존.
+> 확정 설계·실행 절차는 [[0_Airflow Provider 배포 파이프라인 설계]] · [[1_Airflow Provider 배포 셋업 런북]] (deploy/)이 대표. 본 문서는 방안 비교 이력으로 보존.
 
 > **도메인별로 분리된 여러 Airflow 환경** (모두 우리 팀 운영) 에 14개 custom operator 와 helper 코드를 **일관되게 제공**하기 위한 안.
 >

@@ -1,7 +1,6 @@
 # diana/wiki-manifest.md — 팀 위키 스크랩 룰
 
 > 팀 위키가 이 레포를 읽을 때 따르는 규칙. 작성자(diana)가 유지하며, 이 선언이 곧 신뢰도 신호다.
-> (2026-09-08 확정판 — 팀 위키 `_manifest-drafts/diana.md` 초안 대체. 디렉토리 전면 재구성과 동시 적용이므로 **다음 사이클은 재시드 필요**)
 
 ```yaml
 owner: diana
@@ -27,10 +26,10 @@ exclude:
   - "**/README.md"       # 디렉토리 안내·컨텍스트 (사람/에이전트용)
   - "**/*.html"          # 발표용 다이어그램 (내용은 노트 본문에 텍스트로 병기됨)
 
-pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다. 정정 이력 상세는 corrections.md (R#)
+pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다
   - "platform/athlon/userlake/2·3·12·13·14 (Spark Connect 컴퓨트): Dataproc Serverless 전제 검토·실측 —
      컴퓨트 선택이 미정으로 돌아가 재검토 중. 확정 인용 금지 (3은 archived 구판, 14가 비용 대표)"
-  - "결정 변경(2026-09-08): Spark 백필·재처리도 GKE Spark Operator로 일원화, Dataproc Serverless 미사용
+  - "Spark 런타임은 백필·재처리 포함 GKE Spark Operator 일원화, Dataproc Serverless 미사용
      (모니터링 일원화) — 팀 위키 TDR-006의 '백필 전용 병행' 조항과 상충, _triage 이의 대상"
 ```
 
