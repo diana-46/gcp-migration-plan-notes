@@ -4,8 +4,8 @@ Athlon `actions_prod` 기준으로 **active DAG (`dag_prod.is_paused=0 AND dag_p
 
 ## 이관 전제
 
-- 이관 대상: **GCP** (GKE Spark Operator / BigQuery / Cloud SQL / GCS 등) — Spark 런타임은 **GKE Spark Operator 로 일원화** ([[3_spark-apps 런타임 버전 결정]]). 팀 결정(2026-07-29 TDR-006)엔 "Dataproc Serverless 백필·대규모 재처리 병행" 조항이 있으나, **백필도 GKE 에서 처리하고 Dataproc 은 쓰지 않는다** (2026-09-08, 모니터링 지점 일원화 — 실행 환경을 두 개 운영하지 않음)
-- **DB 수집 파이프라인은 CDC 수집(Debezium → Kafka → BigQuery Sink Connector)으로 대체** — 소스 DB(MySQL/Mongo)에서 데이터를 끌어오는 부분은 CDC 파이프라인이 담당. (기존에 검토하던 Datastream은 기각됨 — 수집 트랙 결정, 팀 위키 CDC 개요 참조)
+- 이관 대상: **GCP** (GKE Spark Operator / BigQuery / Cloud SQL / GCS 등) — Spark 런타임은 **백필·재처리 포함 GKE Spark Operator 로 일원화**, Dataproc Serverless 미사용 (모니터링 일원화 — 정정 R4, [[3_spark-apps 런타임 버전 결정]])
+- **DB 수집 파이프라인은 CDC 수집(Debezium → Kafka → BigQuery Sink Connector)으로 대체** — 소스 DB(MySQL/Mongo)에서 데이터를 끌어오는 부분은 CDC 파이프라인이 담당. (정정 R1)
 
 이관 검토 대상에서 제외한 것들 (기존 결정):
 - `run_presto_sql_khp.sh` (Presto CLI, 이관 불필요)
@@ -304,9 +304,7 @@ snapshot BQ 테이블 (또는 단순 view)
 | **A. Spark lift (GKE Spark Operator)** | Spark 앱 그대로 유지 (Neptune snapshot은 BQ scheduled query/view로 대체하되, diff+apply 로직은 Spark 유지) | 로직 재사용, 사내 jar 활용 · Neptune 대체안 필요 |
 | **C. BQ 경유 두 단계** | 서비스 → BQ (CDC 수집) → 정산 Cloud SQL (reverse ETL, Composer+Python or Spark) | CDC + Exporter 인프라 공유 · 지연 큼, 정합성 관리 복잡 |
 
-> ⚠️ **전제 변경 — 재검토 필요 (2026-09)**: 아래 판단은 Datastream 전제("BQ/GCS로만 랜딩 → 직접 CDC 불가")로 쓴 것. Datastream 기각 후 CDC는 Debezium → **Kafka** 경유라, Kafka consumer로 정산 Cloud SQL에 직접 싱크하는 선택지가 새로 생겼다. 직접 CDC 옵션을 다시 검토할 것.
-
-기존 판단(Datastream 전제): BQ/GCS로만 랜딩하므로 서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC는 불가 → Cloud SQL External Replica나 DMS 등 별도 도구 검토.
+> ⚠️ **재검토 필요**: CDC가 Kafka 경유(Debezium)로 확정되면서 **Kafka consumer로 정산 Cloud SQL에 직접 싱크하는 경로**가 생겼다 — 직접 CDC 옵션 재검토 (정정 R1). Cloud SQL External Replica·DMS는 그 경로가 막힐 때의 대안.
 
 **❓ 논의 필요**
 - 정산 시스템이 왜 마스터 데이터를 자기 DB에 두어야 하는지 (조직/보안/성능?)

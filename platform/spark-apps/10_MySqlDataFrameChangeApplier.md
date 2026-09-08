@@ -175,8 +175,7 @@ Kafka 를 안 쓰거나 A-0 이 막힐 때의 대안.
 | A-2. Spark lift (GKE Spark Operator) | Spark 그대로 | 사내 확장(`INSERT IGNORE`/`REPLACE INTO`) 재사용. **문제를 그대로 안고 감** |
 | A-3. 정산 팀이 BQ 직접 read | 앱 자체 제거 | 가장 깔끔하나 **조직 협의 필요** (§4). 정산이 배치로만 읽으면 가능 |
 
-> ⚠️ (2026-09 갱신) 위 제약은 Datastream 전제("BQ/GCS 로만 랜딩 → 직접 CDC 불가")로 쓴 것.
-> Datastream 기각 후 확정된 CDC 는 Debezium → **Kafka** 경유라, Kafka 를 안 쓰는 시나리오 자체가 사실상 사라졌다 — A-0(Kafka 직결) 검토가 우선.
+> ⚠️ CDC 가 Kafka 경유(Debezium)로 확정되어 "Kafka 를 안 쓰는 시나리오" 자체가 사실상 사라졌다 — **A-0(Kafka 직결) 검토가 우선** (정정 R1).
 
 ### Case B
 
@@ -189,9 +188,8 @@ Kafka 를 안 쓰거나 A-0 이 막힐 때의 대안.
 `INSERT IGNORE` / `REPLACE INTO` 는 MySQL 전용 문법이다.
 Cloud SQL for MySQL 을 유지하면 그대로 쓸 수 있고, 다른 DB 로 가면 `INSERT … ON DUPLICATE KEY UPDATE` 등으로 재표현해야 한다.
 
-> ⚠️ (2026-09 갱신) "서비스 Cloud SQL → 정산 Cloud SQL 직접 CDC 불가"는 Datastream 전제의 판단.
-> 확정된 CDC 는 Kafka 경유(Debezium → Kafka)라 Kafka consumer 로 정산 Cloud SQL 에 직접 싱크하는 경로가 가능해졌다.
-> Cloud SQL External Replica / DMS 검토는 그 경로가 막힐 때의 대안으로 순위가 내려간다.
+> ⚠️ CDC 는 Kafka 경유라 **Kafka consumer 로 정산 Cloud SQL 직접 싱크가 가능** (정정 R1).
+> Cloud SQL External Replica / DMS 는 그 경로가 막힐 때의 대안.
 
 ## 6. ❓ 논의 필요
 

@@ -1,6 +1,6 @@
 ---
 title: "Spark Connect 다운사이즈 비용 & 노드 구성 (Seoul 실측)"
-status: draft   # 2026-09-08 격하 — Spark Connect 컴퓨트(Dataproc 계열) 미정, 재검토 중
+status: draft   # 컴퓨트(Dataproc 계열) 미정 — 재검토 중 (정정 R6)
 created: 2026-07-02
 대상: 사내 Spark Connect StatefulSet (userlake-worker driver)
 용도: GCP 이관 시 노드 스펙 확정 + 비용 비교 (현재 vs 다운사이즈)

@@ -27,7 +27,7 @@ exclude:
   - "**/README.md"       # 디렉토리 안내·컨텍스트 (사람/에이전트용)
   - "**/*.html"          # 발표용 다이어그램 (내용은 노트 본문에 텍스트로 병기됨)
 
-pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다
+pitfalls:   # 인용 시 주의 — 원본에서 해소되면 여기서 제거한다. 정정 이력 상세는 corrections.md (R#)
   - "platform/athlon/userlake/2·3·12·13·14 (Spark Connect 컴퓨트): Dataproc Serverless 전제 검토·실측 —
      컴퓨트 선택이 미정으로 돌아가 재검토 중. 확정 인용 금지 (3은 archived 구판, 14가 비용 대표)"
   - "결정 변경(2026-09-08): Spark 백필·재처리도 GKE Spark Operator로 일원화, Dataproc Serverless 미사용

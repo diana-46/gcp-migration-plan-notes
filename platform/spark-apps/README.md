@@ -14,7 +14,7 @@ IDC Hadoop에서 돌던 `spark-apps` (Spark 3.1.3 / Scala 2.12) 배치 잡들을
 
 ## 확정 사항
 
-- DB 수집 파이프라인은 **CDC 수집(Debezium → Kafka → BQ Sink Connector)**으로 대체 → 소스 DB(MySQL/Mongo) 수집 앱은 이관 대상에서 제외 (Datastream은 기각 — 수집 트랙 결정)
+- DB 수집 파이프라인은 **CDC 수집(Debezium → Kafka → BQ Sink Connector)**으로 대체 → 소스 DB(MySQL/Mongo) 수집 앱은 이관 대상에서 제외 (정정 R1)
 - 이미지는 공식 `apache/spark:3.5.8-scala2.12-java17-ubuntu` 기반 직접 빌드
 
 ## 용어
