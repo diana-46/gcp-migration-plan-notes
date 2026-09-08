@@ -24,6 +24,7 @@
 ## 이 레포의 역할
 
 **팀용 LLM 위키의 소스 레포.** 조사·PoC·결정 기록을 여기 쌓고, 위키로 옮기기 좋은 형태(폴더별 결론 노트 + README 컨텍스트)로 유지한다.
+팀 위키가 이 레포를 읽어갈 때의 규칙(범위·신뢰도·함정)은 **[[wiki-manifest]]** 가 정본이다.
 
 **확정 사항** (이 레포에서는 재논의하지 않음):
 
@@ -35,25 +36,22 @@
 ## 인덱스
 
 각 폴더의 entry point는 `README.md`(컨텍스트)와 숫자가 가장 낮은 결론 노트(`0_결론` 또는 `1_개요`).
-
-### 보고 (루트)
-
-- [[0_GCP 이관 보고]] — GCP 이관 전체 보고
-- [[0_Cloud Composer 인프라 보고]] — Composer 인프라 보고
-
-### 주제 폴더
+폴더 번호 = 읽기 순서 (플랫폼 구성 → 전환 → 워커/앱 → 서비스 실행 → 대외 공유).
 
 | 폴더 | 다루는 것 | 컨텍스트 |
 |---|---|---|
-| `스케줄러/` | Airflow 운영 (Composer vs Self-managed), 비용·권한·배포, Composer 3 신규 환경 구축(Terraform), PoC | [[스케줄러/README\|README]] |
-| `애슬론/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[애슬론/README\|README]] |
-| `dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[dbt/README\|README]] |
-| `userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트·다운사이즈·비용 결정 | [[userlake/README\|README]] |
-| `asset/` | Airflow 3 Asset scheduling 실전 (실측 + 제약 + 3.2/3.3 개선 + MDL aligning) | [[asset/README\|README]] |
-| `spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[spark-apps/README\|README]] |
-| `deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[deploy/README\|README]] |
-| `공유/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[공유/README\|README]] |
-| `베리즈 데이터 이관/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[베리즈 데이터 이관/README\|README]] |
+| `00-보고/` | GCP 이관 전체 보고, Composer 인프라 보고 | [[0_GCP 이관 보고]] |
+| `10-스케줄러/` | Airflow 운영 (Composer vs Self-managed), 비용·권한·배포, Composer 3 신규 환경 구축(Terraform), PoC | [[10-스케줄러/README\|README]] |
+| `11-asset/` | Airflow 3 Asset scheduling 실전 (실측 + 제약 + 3.2/3.3 개선 + MDL aligning) | [[11-asset/README\|README]] |
+| `12-deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[12-deploy/README\|README]] |
+| `20-애슬론/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[20-애슬론/README\|README]] |
+| `21-dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[21-dbt/README\|README]] |
+| `22-presto-to-bigquery/` | Presto→BQ 함수매핑·함정 케이스 실측 검증 | [[22-presto-to-bigquery/README\|README]] |
+| `30-userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트(미정)·다운사이즈·비용 | [[30-userlake/README\|README]] |
+| `31-spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[31-spark-apps/README\|README]] |
+| `40-베리즈/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[40-베리즈/README\|README]] |
+| `50-공유/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[50-공유/README\|README]] |
+| `90-wip/` | raw 작업장 — **팀 위키 스크랩 제외.** 정리되면 주제 폴더로 승격 | [[90-wip/README\|README]] |
 | `attachments/` | 이미지·첨부 모음 | — |
 
 ---
@@ -63,13 +61,13 @@
 이 vault에서 작업할 때 에이전트(Claudian)와 사용자가 함께 지키는 규칙.
 새 노트를 만들거나 기존 노트를 정리할 때는 이 규칙을 먼저 확인한다.
 
-> **Nested 규칙**: 작업 대상이 주제 폴더(예: `스케줄러/`) 안에 있을 때, 그 폴더에 `README.md`가 있으면 root `README.md`와 함께 반드시 읽는다. 카테고리별 컨텍스트·용어·외부자료·로컬 규칙이 거기 적혀 있다.
+> **Nested 규칙**: 작업 대상이 주제 폴더(예: `10-스케줄러/`) 안에 있을 때, 그 폴더에 `README.md`가 있으면 root `README.md`와 함께 반드시 읽는다. 카테고리별 컨텍스트·용어·외부자료·로컬 규칙이 거기 적혀 있다.
 
 ---
 
 ### 1. 폴더 / 파일 명명
 
-- 주제별 폴더 하나에 관련 노트들을 모은다 (예: `스케줄러/`).
+- 주제별 폴더 하나에 관련 노트들을 모은다 (예: `10-스케줄러/`).
 - 파일명은 **숫자 prefix + 언더스코어**로 정렬한다:
   - `1_개요.md` — **결론/의사결정 노트** (해당 주제의 entry point)
   - `2_...md`, `3_...md`, … — 근거/참고 자료 (논리적 흐름 순서)
@@ -103,7 +101,7 @@
 ---
 title: "노트 제목"
 tags: [주제태그, 추가태그]
-status: draft     # draft | review | final | archived
+status: draft     # wip(작업중, 스크랩 제외) | draft(증언) | final(확정 — 팀 위키가 결론으로 인용 가능) | archived(폐기, 스크랩 제외)
 created: 2026-05-12
 updated: 2026-05-12
 source: <원본 URL, import한 경우만>
@@ -162,7 +160,7 @@ source: <원본 URL, import한 경우만>
       └── 이전_검토안_2026-04.md
   ```
 - `attachments/` — vault root에 단일 폴더로 두고 이미지 / 첨부 모음.
-- `일일/` — 데일리 / 스크래치 노트. `일일/2026-05-12.md` 형식.
+- `90-wip/` — raw 작업장·데일리 스크래치. `90-wip/2026-05-12 주제.md` 형식. **팀 위키 스크랩 제외** — 정리되면 주제 폴더로 이동(=draft 승격). (구 `일일/` 규칙 대체)
 - `회의록/` — 외부 회의록. `회의록/2026-05-12-주제.md` 형식.
 
 루트에 임시 노트가 쌓이지 않게 위 폴더 중 하나로 분류한다.
