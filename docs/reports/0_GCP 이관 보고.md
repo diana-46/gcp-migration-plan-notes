@@ -70,7 +70,7 @@ created: 2026-06-25
 - **테스트 / 문서 / 환경 분리** — 표준 도구로 깔끔
 - **CI/CD 친화** — git PR 워크플로 자연스러움
 
-상세: [[platform/dbt/1_materialization]] ~ [[platform/dbt/6_배포와 환경 분리]]
+상세: [[platform/athlon/dbt/1_materialization]] ~ [[platform/athlon/dbt/6_배포와 환경 분리]]
 
 ### 2-4. 왜 Cosmos
 
@@ -79,7 +79,7 @@ created: 2026-06-25
 - **Composer 표준 ExecutionMode.LOCAL** — admission webhook 충돌 없음
 - **emit_datasets 로 Asset outlet 자동 부착** — DataHub / cross-DAG 연동 0 코드
 
-상세: [[platform/dbt/5_의존성 관리]]
+상세: [[platform/athlon/dbt/5_의존성 관리]]
 
 ### 2-5. 왜 DE 자율 git 모델
 
@@ -200,7 +200,7 @@ created: 2026-06-25
 | [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] | PoC 결론 — 기술 실현 가능성 확정 |
 | [[platform/athlon/6_마이그레이션 플랜]] | Phase 별 활동 / RACI / Gate / 일정 |
 | [[platform/airflow/deploy/4_관리 레포 인벤토리]] | 운영 모델 (3 레포) / AS-IS vs TO-BE |
-| [[platform/dbt/1_materialization]] ~ [[platform/dbt/6_배포와 환경 분리]] | dbt 패턴 상세 |
+| [[platform/athlon/dbt/1_materialization]] ~ [[platform/athlon/dbt/6_배포와 환경 분리]] | dbt 패턴 상세 |
 | [[platform/athlon/2_Git 동기화·dbt 전환 계획]] | 초기 전환 계획 |
 | [[platform/athlon/3_dbt 능력 경계와 영역 분담]] | dbt vs Airflow 책임 분리 |
 | [[platform/athlon/4_Asset-Centric 아키텍처 안]] | Asset 기반 아키텍처 |

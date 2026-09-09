@@ -7,7 +7,7 @@ owner: diana
 updated: 2026-09-08
 track: >
   스케줄러(Composer/Airflow) · asset(Airflow Asset 스케줄링) · deploy(Provider 배포) ·
-  애슬론 ETL 전환 · dbt 검증/규약 · presto-to-bigquery 쿼리 검증 ·
+  애슬론 ETL 전환(Neptune→dbt) · dbt 검증/규약 · presto-to-bigquery 쿼리 검증 ·
   userlake · spark-apps(GKE Spark Operator 이관) · 베리즈 이관 실행 · 공유(대외 설명자료)
 
 rules:

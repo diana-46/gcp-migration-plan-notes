@@ -162,4 +162,4 @@ DataHub vs Knowledge Catalog (Dataplex) 비교 결과 DataHub 채택:
 - [[platform/airflow/_archive/10_DataHub vs Knowledge Catalog 비교]] — 툴 선정 근거
 - [[platform/athlon/4_Asset-Centric 아키텍처 안]] — Asset 중심 아키텍처 설계
 - [[platform/athlon/8_배포 시 유의할 점]] § 4-5 — DataHub CI 제약 실전
-- [[platform/dbt/2_schema 관리]] — schema.yml 을 통한 문서화 흐름
+- [[platform/athlon/dbt/2_schema 관리]] — schema.yml 을 통한 문서화 흐름

@@ -18,10 +18,10 @@ platform/                 "플랫폼을 무엇으로 어떻게 짓나" (팀 위�
 │   ├── deploy/           배포 전반 — Provider 파이프라인·3축 통합·레포 인벤토리·DAG Bundles(불가)
 │   ├── research/         결정 근거 비교 (Composer vs Self-managed 등)
 │   └── asset/            Airflow Asset 스케줄링 실측
-├── athlon/               ETL 플랫폼 전환 (+ PoC/)
+├── athlon/               ETL 플랫폼 전환 — Neptune→dbt (+ PoC/)
+│   ├── dbt/              dbt 검증·이관 규약 (diana 몫은 전환까지 — 전환 후 운영은 DW DE 소관)
+│   │   └── presto-to-bigquery/  쿼리 변환 실측 검증
 │   └── userlake/         userlake-worker 이관 (athlon 하위 기능)
-├── dbt/                  dbt 검증·이관 규약
-│   └── presto-to-bigquery/  쿼리 변환 실측 검증
 └── spark-apps/           Spark 배치 앱의 GKE 이관
 migration/                서비스별 이관 실행 (팀 위키 '데이터 이관'과 1:1)
 └── berriz/

@@ -143,6 +143,6 @@ BashOperator + `dbt run` 만 쓴다면 잃는 것들:
 
 - [[2_결정A_dbt로_왜_가는가]] — dbt 이관 결정
 - [[5_3layer_배포_아키텍처]] § Layer 2 — dbt project 배포 흐름
-- [[platform/dbt/0_dbt 기본 개념]] § 8 — manifest.json 설명
-- [[platform/dbt/1_materialization]] § 2-1 — Cosmos + ephemeral 상호작용
+- [[platform/athlon/dbt/0_dbt 기본 개념]] § 8 — manifest.json 설명
+- [[platform/athlon/dbt/1_materialization]] § 2-1 — Cosmos + ephemeral 상호작용
 - [[platform/athlon/8_배포 시 유의할 점]] § 1 — 배포 순서

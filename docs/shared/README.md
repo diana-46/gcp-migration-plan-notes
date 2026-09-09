@@ -1,7 +1,7 @@
 # 공유 — Neptune → dbt + 팀별 DAG 전환 제안
 
 > 이 폴더는 DE / 매니저 / 플랫폼팀에 공유할 목적의 문서 세트. 각 파일은 하나의 관점을 다루며
-> 독립적으로 읽어도 됨. 상세 근거는 `[[platform/airflow/*]]`, `[[platform/athlon/*]]`, `[[platform/dbt/*]]` 로 링크.
+> 독립적으로 읽어도 됨. 상세 근거는 `[[platform/airflow/*]]`, `[[platform/athlon/*]]`, `[[platform/athlon/dbt/*]]` 로 링크.
 
 ## 한 줄 요약
 

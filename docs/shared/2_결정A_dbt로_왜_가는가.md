@@ -1,7 +1,7 @@
 # 2. 결정 A — SQL: Neptune → dbt
 
 > 왜 SQL 을 dbt 로 이관하는가. Neptune 관리의 구조적 한계 + dbt 로 얻는 것 + 실증.
-> 관련: [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[platform/dbt/0_dbt 기본 개념]]
+> 관련: [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[platform/athlon/dbt/0_dbt 기본 개념]]
 
 ## Neptune SQL 관리의 한계 2가지
 
@@ -54,16 +54,16 @@ Completed successfully in 8s.
 
 | Neptune 패턴 | dbt 대응 | 상세 |
 |---|---|---|
-| PLAIN, no partition, 매번 재생성 | `materialized='table'` | [[platform/dbt/1_materialization]] |
+| PLAIN, no partition, 매번 재생성 | `materialized='table'` | [[platform/athlon/dbt/1_materialization]] |
 | PLAIN, daily partition, 재빌드 | `incremental` + `insert_overwrite` | 같은 노트 |
-| YAML multi-temp + perm | `temp/` 계층 + mart | [[platform/dbt/7_테이블 아웃풋]] |
-| hourly-in-daily block replace | custom `insert_only` + pre_hook DELETE | [[platform/dbt/8_insert_overwrite_매커니즘]] |
+| YAML multi-temp + perm | `temp/` 계층 + mart | [[platform/athlon/dbt/7_테이블 아웃풋]] |
+| hourly-in-daily block replace | custom `insert_only` + pre_hook DELETE | [[platform/athlon/dbt/8_insert_overwrite_매커니즘]] |
 | hourly partition + replace | `insert_overwrite` + hourly TIMESTAMP partition | 같은 노트 |
 | Presto SQL 방언 | BigQuery SQL 방언 (`FORMAT_DATE`, `PARSE_TIMESTAMP`, `DATETIME_ADD` 등) | 자동 변환 도구 준비 |
 | Presto `ROW` / `ARRAY(ROW)` | BQ `STRUCT` / `ARRAY<STRUCT>` | 매핑 1:1 |
-| `${var}` 치환 | `{{ var('...') }}` | [[platform/dbt/4_parameter 치환]] |
-| 명시적 upstream 선언 | `ref()` 자동 추론 | [[platform/dbt/5_의존성 관리]] |
-| 스키마 자동 sync | `on_schema_change` + `contract` | [[platform/dbt/2_schema 관리]] |
+| `${var}` 치환 | `{{ var('...') }}` | [[platform/athlon/dbt/4_parameter 치환]] |
+| 명시적 upstream 선언 | `ref()` 자동 추론 | [[platform/athlon/dbt/5_의존성 관리]] |
+| 스키마 자동 sync | `on_schema_change` + `contract` | [[platform/athlon/dbt/2_schema 관리]] |
 
 ## PoC 실증 — bizberry hourly 4 mart 이관 (2026-07)
 
@@ -83,7 +83,7 @@ Story 팀 얼리어답터 케이스. Neptune 원본 세만틱을 유지하며 �
 - Nested type (`STRUCT`, `ARRAY<STRUCT>`) BQ 표현 완비
 - Cosmos + Airflow 3.1 (`airflow.sdk`) 로 dbt DAG 자동 렌더
 
-**관련 노트**: [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[platform/athlon/8_배포 시 유의할 점]], [[platform/dbt/8_insert_overwrite_매커니즘]]
+**관련 노트**: [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]], [[platform/athlon/8_배포 시 유의할 점]], [[platform/athlon/dbt/8_insert_overwrite_매커니즘]]
 
 ## 흔한 질문
 
@@ -99,13 +99,13 @@ Story 팀 얼리어답터 케이스. Neptune 원본 세만틱을 유지하며 �
 **"dbt 학습 곡선"**
 - SELECT + Jinja 조합. SQL 은 그대로.
 - LLM 도구 (Claude, Copilot) 로 첫 뼈대 생성 후 검수
-- 5-page 챗봇용 gotcha 노트 [[platform/dbt/0_dbt 기본 개념]] ~ [[platform/dbt/8_insert_overwrite_매커니즘]]
+- 5-page 챗봇용 gotcha 노트 [[platform/athlon/dbt/0_dbt 기본 개념]] ~ [[platform/athlon/dbt/8_insert_overwrite_매커니즘]]
 
 ## 관련 문서
 
 - [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] — 기술 검증 결과
 - [[platform/athlon/8_배포 시 유의할 점]] — 실전 배포 함정
-- [[platform/dbt/0_dbt 기본 개념]] — dbt 기본기
-- [[platform/dbt/1_materialization]] — materialization 별 trade-off
-- [[platform/dbt/7_테이블 아웃풋]] — 저장 전략
-- [[platform/dbt/8_insert_overwrite_매커니즘]] — insert_overwrite 내부 동작
+- [[platform/athlon/dbt/0_dbt 기본 개념]] — dbt 기본기
+- [[platform/athlon/dbt/1_materialization]] — materialization 별 trade-off
+- [[platform/athlon/dbt/7_테이블 아웃풋]] — 저장 전략
+- [[platform/athlon/dbt/8_insert_overwrite_매커니즘]] — insert_overwrite 내부 동작

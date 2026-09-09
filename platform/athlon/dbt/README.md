@@ -40,4 +40,4 @@ Neptune/Presto 기반 SQL ETL을 **dbt + BigQuery + Composer(Cosmos)** 스택으
 
 - [dbt 공식 문서](https://docs.getdbt.com/) · [dp-dbt-utils](https://github.com/kakaoent/dp-dbt-utils)
 - PoC 레포: `dbt-test` / `dbt-test-airflow-dags` · 파일럿: `berrizdata-dbt`, `storydata-dbt`, `mlb-dbt`, `musicdata-lab-dbt`
-- 상위 검토 문서: [[../athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토|애슬론/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]]
+- 상위 검토 문서: [[../5_Neptune SQL 변환의 dbt-BigQuery 대체 검토|애슬론/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]]

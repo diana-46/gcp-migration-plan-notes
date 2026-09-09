@@ -48,7 +48,7 @@
    - `{{ ref() }}`, `{{ source() }}`, `{{ var() }}`
    - `materialized`, `incremental_strategy`, `partition_by` 개념
    - `dbt run`, `dbt test`, `dbt compile` CLI
-   - 학습 자료: [[platform/dbt/0_dbt 기본 개념]] ~ [[platform/dbt/7_테이블 아웃풋]]
+   - 학습 자료: [[platform/athlon/dbt/0_dbt 기본 개념]] ~ [[platform/athlon/dbt/7_테이블 아웃풋]]
 
 2. **Airflow DAG 기초** (Python)
    - `with DAG(...) as dag:` 구조
@@ -116,7 +116,7 @@
 
 **이관 방식**:
 1. Neptune YAML / SQL 을 dbt `.sql` 로 포팅 (초안은 자동 변환 도구 + 수동 검수)
-2. 파티션 / 세만틱 mapping (관련: [[platform/dbt/1_materialization]], [[platform/dbt/7_테이블 아웃풋]])
+2. 파티션 / 세만틱 mapping (관련: [[platform/athlon/dbt/1_materialization]], [[platform/athlon/dbt/7_테이블 아웃풋]])
 3. `storydata-airflow-dags` 저장소에 DAG 파일 생성 (cosmos + Loupe operator)
 4. `_integration` target 으로 dev 테스트
 5. Dual-run 후 prod 전환
@@ -130,8 +130,8 @@
 
 ### 사내
 
-- [[platform/dbt/0_dbt 기본 개념]] — dbt 기본기 (1-2시간 리딩)
-- [[platform/dbt/1_materialization]] ~ [[platform/dbt/8_insert_overwrite_매커니즘]] — 응용 상세
+- [[platform/athlon/dbt/0_dbt 기본 개념]] — dbt 기본기 (1-2시간 리딩)
+- [[platform/athlon/dbt/1_materialization]] ~ [[platform/athlon/dbt/8_insert_overwrite_매커니즘]] — 응용 상세
 - [[platform/athlon/5_Neptune SQL 변환의 dbt-BigQuery 대체 검토]] — 이관 검증
 - [[platform/athlon/8_배포 시 유의할 점]] — 실전 함정
 - 사내 예제 DAG 10-15개 (Story 팀 실제 이관본 활용 가능)
@@ -148,4 +148,4 @@
 - [[2_결정A_dbt로_왜_가는가]] — dbt 결정 근거
 - [[3_결정B_팀별_DAG_저장소]] — DAG 결정 근거
 - [[8_실행계획과_안전장치]] — Phase / 지원 체계
-- [[platform/dbt/0_dbt 기본 개념]] — 학습 시작점
+- [[platform/athlon/dbt/0_dbt 기본 개념]] — 학습 시작점

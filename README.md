@@ -46,8 +46,8 @@
 | `platform/airflow/deploy/` | Airflow Provider 배포 파이프라인 설계·런북 + 공유 Airflow 사용 가이드 | [[platform/airflow/deploy/README\|README]] |
 | `platform/athlon/` | athlon 플랫폼 재구현 — dbt 수용 / operator 분담 / 이관 대상 Operator 인벤토리, PoC | [[platform/athlon/README\|README]] |
 | `platform/athlon/userlake/` | userlake-worker GCP 이관 — 인프라 대체 확정 + Spark Connect 컴퓨트(미정)·다운사이즈·비용 | [[platform/athlon/userlake/README\|README]] |
-| `platform/dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[platform/dbt/README\|README]] |
-| `platform/dbt/presto-to-bigquery/` | Presto→BQ 함수매핑·함정 케이스 실측 검증 | [[platform/dbt/presto-to-bigquery/README\|README]] |
+| `platform/athlon/dbt/` | Neptune→dbt PoC 검증 (materialization·스키마·백필·의존성), incremental 전략, Presto→BQ 이관 규약, dp-dbt-utils | [[platform/athlon/dbt/README\|README]] |
+| `platform/athlon/dbt/presto-to-bigquery/` | Presto→BQ 함수매핑·함정 케이스 실측 검증 | [[platform/athlon/dbt/presto-to-bigquery/README\|README]] |
 | `platform/spark-apps/` | spark-apps 배치의 GKE Spark Operator 이관 — 인벤토리·런타임 결정·첫 이관 앱 | [[platform/spark-apps/README\|README]] |
 | `migration/berriz/` | 베리즈 데이터 이관 워크스트림 (날짜별 작업 로그) | [[migration/berriz/README\|README]] |
 | `docs/shared/` | DE/매니저/플랫폼팀 공유용 문서 세트 (결정 A/B, 로드맵, Before/After) | [[docs/shared/README\|README]] |
